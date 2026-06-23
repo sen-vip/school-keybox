@@ -31,7 +31,7 @@ html{
   scroll-behavior:smooth;
   scroll-padding-top:92px;
 }
-#searchArea,#quickCopy,#siteSection,#schoolInfo,#bankInfo,#cardInfo{
+#searchSection,#quickCopy,#siteSection,#schoolInfo,#bankInfo,#cardInfo{
   scroll-margin-top:92px;
 }
 body{
@@ -1599,7 +1599,7 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
 }
 @media (max-width:800px){
   html{scroll-padding-top:126px}
-  #searchArea,#quickCopy,#siteSection,#schoolInfo,#bankInfo,#cardInfo{scroll-margin-top:126px}
+  #searchSection,#quickCopy,#siteSection,#schoolInfo,#bankInfo,#cardInfo{scroll-margin-top:126px}
   .app{width:min(100% - 24px,1220px);margin-top:20px}
   h1{font-size:32px}
   .trust-badges{justify-content:flex-start}
@@ -2268,3 +2268,560 @@ td{
   font-weight:500 !important;
 }
 
+
+/* ============================================================
+   v3.0 toolbar regrouping: excel / print / PC storage / data menu
+   ============================================================ */
+.top-brand-icon{
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font-size:20px!important;
+  line-height:1;
+}
+
+.toolbar-actions-full{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:0;
+}
+.toolbar-group{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  flex:0 0 auto;
+}
+.toolbar-spacer{
+  flex:1 1 auto;
+  min-width:24px;
+}
+.btn.print-soft{
+  background:#fff;
+  border-color:#D8DEE8;
+  color:#475569;
+  box-shadow:none!important;
+}
+.btn.print-soft:hover{
+  background:#F8FAFC;
+  border-color:#CBD5E1;
+  color:#334155;
+}
+.btn.load-pc{
+  border-color:#D8E6FB;
+  color:#315BB8;
+}
+.btn.load-pc:hover{
+  background:#F7FAFF;
+  border-color:#BCD4F6;
+}
+.data-menu{
+  position:relative;
+  flex:0 0 auto;
+}
+.data-menu summary{
+  list-style:none;
+  cursor:pointer;
+}
+.data-menu summary::-webkit-details-marker{display:none}
+.btn.data-menu-btn{
+  background:#fff;
+  border-color:#E5E8EE;
+  color:#64748B;
+  box-shadow:none!important;
+}
+.btn.data-menu-btn::after{
+  content:"▾";
+  margin-left:7px;
+  font-size:11px;
+  color:#94A3B8;
+}
+.data-menu[open] .data-menu-btn,
+.btn.data-menu-btn:hover{
+  background:#F8FAFC;
+  border-color:#D8DEE8;
+  color:#475569;
+}
+.data-menu-panel{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  z-index:40;
+  min-width:190px;
+  padding:8px;
+  border:1px solid #E5E8EE;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 14px 34px rgba(15,23,42,.12);
+}
+.menu-action{
+  width:100%;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding:0 12px;
+  border:0;
+  border-radius:11px;
+  background:#fff;
+  color:#475569;
+  font:inherit;
+  font-size:13.5px;
+  font-weight:520;
+  letter-spacing:-.012em;
+  cursor:pointer;
+  text-align:left;
+}
+.menu-action:hover{background:#F8FAFC;color:#334155}
+.menu-action.danger-action{color:#E5484D}
+.menu-action.danger-action:hover{background:#FFF6F6;color:#D92D3A}
+
+@media (max-width: 760px){
+  .toolbar-actions-full{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .toolbar-group{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .output-group,
+  .data-menu{display:block;width:100%}
+  .toolbar-spacer{display:none}
+  .toolbar .btn,
+  .data-menu-btn{width:100%}
+  .data-menu-panel{position:static;margin-top:8px;box-shadow:none}
+}
+
+/* ============================================================
+   v3.0.1 typography hierarchy: 눈 편한 3단계 글자 위계
+   - 주요 정보: 또렷하게
+   - 보조 정보: 차분하게
+   - 라벨/헤더: 조용하지만 읽히게
+   ============================================================ */
+:root{
+  --text-strong:#1E293B;
+  --text-value:#334155;
+  --text-soft:#64748B;
+  --text-weak:#94A3B8;
+}
+
+body{
+  color:var(--text-strong);
+}
+
+/* 1순위: 섹션 제목 / 사이트명 / 빠른복사 이름 */
+.section-title h2,
+.info-card h2,
+.quick-copy-head strong,
+.site-input,
+.quick-item strong{
+  color:var(--text-strong) !important;
+  font-weight:600 !important;
+  letter-spacing:-.035em;
+}
+
+.section-title h2,
+.info-card h2,
+.quick-copy-head strong{
+  font-weight:700 !important;
+}
+
+/* 1.5순위: 실제로 복사해서 쓰는 값(ID/PW/정보값) */
+.account-copy-cell .table-input,
+.inline-input{
+  color:var(--text-value) !important;
+  font-weight:540 !important;
+  letter-spacing:-.012em;
+}
+
+/* 사이트명 입력칸은 값보다 한 단계 더 먼저 보이게 유지 */
+.site-input{
+  color:var(--text-strong) !important;
+  font-weight:600 !important;
+}
+
+/* 2순위: 설명, 메모, 카운트, 열기 등 보조 정보 */
+.memo-sub,
+.section-desc,
+.info-sub,
+.account-title-side p,
+.quick-copy-head span,
+.search-result-info,
+.small-muted,
+.open-url-btn{
+  color:var(--text-soft) !important;
+  font-weight:430 !important;
+}
+
+.memo-sub{
+  font-weight:400 !important;
+  line-height:1.48;
+}
+
+/* 3순위: 헤더/라벨/placeholder는 조용하게 정돈 */
+th,
+.info-row label,
+.info-label,
+.label-input{
+  color:var(--text-soft) !important;
+  font-weight:560 !important;
+  letter-spacing:-.01em;
+}
+
+.table-input::placeholder,
+.inline-input::placeholder,
+.label-input::placeholder,
+.memo-sub::placeholder,
+.account-search::placeholder{
+  color:var(--text-weak) !important;
+  font-weight:400 !important;
+}
+
+/* 표 본문은 검정보다 부드러운 차콜로 통일 */
+td{
+  color:var(--text-value) !important;
+  font-weight:400 !important;
+}
+
+/* ID/PW 칩은 라벨로만 보이게, 실제 값보다 튀지 않게 */
+.copy-chip,
+.copy-btn,
+.copy-pill{
+  color:#1D5DBE !important;
+  background:#EEF4FB !important;
+  border-color:#EEF4FB !important;
+  font-weight:600 !important;
+}
+.copy-chip:hover,
+.copy-btn:hover,
+.copy-pill:hover{
+  background:#E6F0FF !important;
+  border-color:#E6F0FF !important;
+  color:#1D5DBE !important;
+}
+
+/* 보조 아이콘들은 선명하지만 시선은 덜 빼앗기게 */
+.site-badge{
+  color:#475569 !important;
+  font-weight:600 !important;
+}
+.star-btn,
+.quick-star,
+.drag-handle{
+  color:#A8B4C4 !important;
+  opacity:.78;
+}
+.star-btn.on,
+.quick-star.on{
+  color:#F59E0B !important;
+  opacity:1;
+}
+
+/* 검색 입력은 흐리지 않게 */
+.account-search{
+  color:var(--text-value) !important;
+  font-weight:430 !important;
+}
+
+/* ============================================================
+   v3.0.2 Top nav button visibility refinement
+   - 모든 상단 섹션 링크에 홈 버튼과 같은 pill 배경 적용
+   - 로고 열쇠 이모지는 배경/테두리 없이 단독 표시
+   ============================================================ */
+.top-brand-icon{
+  width:auto;
+  height:auto;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:inherit;
+  font-size:20px;
+  line-height:1;
+}
+
+.top-menu a{
+  background:#F7F9FC;
+  border-color:#EDF1F5;
+  color:#4B5563;
+  box-shadow:0 1px 2px rgba(15,23,42,.025);
+}
+
+.top-menu a:hover{
+  background:#F3F8FF;
+  border-color:#D7E8FF;
+  color:#2563EB;
+  box-shadow:0 4px 10px rgba(37,99,235,.06);
+}
+
+.top-menu a.home-link{
+  background:#F3F8FF;
+  border-color:#D7E8FF;
+  color:#2563EB;
+  box-shadow:0 4px 10px rgba(37,99,235,.055);
+}
+
+.top-menu a:active{
+  transform:translateY(1px);
+}
+
+/* ============================================================
+   Mobile readability update for site accounts
+   - CSS-only responsive layout refinement
+   - No data/rendering/copy/save logic changed
+   ============================================================ */
+@media (max-width:800px){
+  #siteSection.main-account-card{
+    padding:18px 14px;
+  }
+
+  #siteSection .section-title{
+    gap:10px;
+    padding-bottom:12px;
+  }
+
+  #siteSection .section-title h2{
+    font-size:21px;
+    line-height:1.25;
+  }
+
+  #siteSection .section-desc{
+    font-size:13px;
+    font-weight:600;
+    color:#64748b;
+  }
+
+  #siteSection .flat-table{
+    overflow:visible;
+    border-radius:18px;
+    background:#fff;
+  }
+
+  #siteSection .flat-table table,
+  #siteSection .flat-table tbody{
+    display:block;
+    width:100%;
+    min-width:0 !important;
+  }
+
+  #siteSection .flat-table colgroup,
+  #siteSection .flat-table thead{
+    display:none;
+  }
+
+  #siteSection .flat-table tbody{
+    border-radius:18px;
+    overflow:hidden;
+  }
+
+  #siteSection .flat-table tr{
+    display:grid;
+    grid-template-columns:32px minmax(0,1fr) 28px;
+    column-gap:8px;
+    row-gap:0;
+    align-items:start;
+    min-height:0;
+    padding:16px 12px;
+    border-bottom:1px solid #eef2f6;
+    background:#fff;
+  }
+
+  #siteSection .flat-table tr:nth-child(even){
+    background:#fafbfc;
+  }
+
+  #siteSection .flat-table tr:last-child{
+    border-bottom:0;
+  }
+
+  #siteSection .flat-table td,
+  #siteSection .flat-table tr:hover td,
+  #siteSection tbody tr:nth-child(even) td{
+    display:block;
+    width:100%;
+    min-width:0;
+    height:auto;
+    padding:0;
+    border-bottom:0;
+    background:transparent !important;
+  }
+
+  #siteSection .favorite-cell{
+    grid-column:1;
+    grid-row:1 / span 3;
+    width:32px;
+    min-width:32px;
+    max-width:32px;
+    padding-top:3px;
+    text-align:center;
+  }
+
+  #siteSection .star-btn{
+    width:32px;
+    height:32px;
+    min-width:32px;
+    min-height:32px;
+    font-size:16px;
+    border-radius:10px;
+  }
+
+  #siteSection td.site{
+    grid-column:2;
+    grid-row:1;
+    padding-left:0;
+  }
+
+  #siteSection .site-label,
+  #siteSection .account-site-label{
+    align-items:flex-start;
+    gap:10px;
+  }
+
+  #siteSection .account-site-label .site-badge,
+  #siteSection .site-badge{
+    width:36px;
+    height:36px;
+    min-width:36px;
+    font-size:14px;
+    margin-top:0;
+  }
+
+  #siteSection .site-texts{
+    gap:4px;
+    min-width:0;
+  }
+
+  #siteSection .site-main-line{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+  }
+
+  #siteSection .site-input{
+    min-height:28px;
+    padding:0;
+    border-color:transparent !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:#0f172a;
+    font-size:15px;
+    font-weight:650;
+    line-height:1.35;
+    letter-spacing:-.035em;
+  }
+
+  #siteSection .memo-sub{
+    height:22px !important;
+    min-height:22px;
+    max-height:22px;
+    padding:0;
+    border-color:transparent !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:#64748b;
+    font-size:13px;
+    font-weight:400;
+    line-height:1.45;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #siteSection .open-url-btn{
+    min-height:28px;
+    padding:0 9px;
+    border:1px solid #dbe5f0;
+    border-radius:999px;
+    background:#fff;
+    color:#475569;
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  #siteSection .open-url-btn:hover{
+    background:#f8fbff;
+    border-color:#bfdbfe;
+    color:#2563eb;
+  }
+
+  #siteSection td:has(.account-copy-cell){
+    grid-column:2;
+    margin-top:8px;
+  }
+
+  #siteSection .account-copy-cell{
+    display:grid;
+    grid-template-columns:44px minmax(0,1fr);
+    gap:8px;
+    align-items:center;
+    max-width:100%;
+  }
+
+  #siteSection .account-copy-cell .copy-chip{
+    width:auto;
+    min-width:44px;
+    height:30px;
+    min-height:30px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  #siteSection .account-copy-cell .table-input{
+    height:32px;
+    min-height:32px;
+    padding:5px 10px;
+    border-radius:10px;
+    color:#334155;
+    font-size:13.5px;
+    font-weight:500;
+    background:#fff;
+    border-color:#eef2f6;
+  }
+
+  #siteSection .drag-cell{
+    grid-column:3;
+    grid-row:1 / span 3;
+    align-self:start;
+    justify-self:end;
+    text-align:right;
+    padding-top:4px;
+  }
+
+  #siteSection .drag-handle{
+    width:28px;
+    height:28px;
+    min-width:28px;
+    min-height:28px;
+    padding:0;
+    opacity:.55;
+  }
+
+  #siteSection .select-cell{
+    grid-column:1;
+    grid-row:1 / span 3;
+    padding-top:7px;
+    text-align:center;
+  }
+
+  #siteSection .delete-mode tr{
+    grid-template-columns:32px minmax(0,1fr);
+  }
+
+  #siteSection .delete-mode .favorite-cell{
+    display:none;
+  }
+}

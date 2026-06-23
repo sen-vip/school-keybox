@@ -838,7 +838,11 @@ function buildUploadPlan(uploaded) {
     uploaded,
     info: { school: [], bank: [], card: [] },
     accounts: [],
-    // Track the number of new, changed, same, removed and duplicate records
+    // Track how many items fall into each bucket.  In addition to the
+    // original new/changed/same/removed counts we now record the
+    // number of duplicate rows detected within the upload.  Duplicate
+    // rows are not added to the plan.accounts list, so we must
+    // explicitly compute the count from the uploaded object.
     counts: { new: 0, changed: 0, same: 0, removed: 0, duplicate: 0 }
   };
 
@@ -902,10 +906,10 @@ function buildUploadPlan(uploaded) {
       plan.counts.removed += 1;
     });
   }
-  // Count duplicate accounts detected during upload parsing
-  if (uploaded.duplicateAccounts && Array.isArray(uploaded.duplicateAccounts)) {
-    plan.counts.duplicate = uploaded.duplicateAccounts.length;
-  }
+  // Set the duplicate count based on what parseUploadedWorkbook detected.
+  plan.counts.duplicate = Array.isArray(uploaded.duplicateAccounts)
+    ? uploaded.duplicateAccounts.length
+    : 0;
   return plan;
 }
 function planItemList(plan) {
@@ -997,9 +1001,20 @@ function resetUploadInput() {
 }
 function showUploadReviewModal(plan) {
   closeUploadModal();
+  // Determine how many unique rows the plan contains.  When there are
+  // zero items we differentiate between an empty diff and a missing
+  // sheet/header to give a more helpful message.  If both the info and
+  // account sheets were missing we display a specific error guiding
+  // users to the template; otherwise fall back to the original text.
   const total = planItemList(plan).length;
   if (!total) {
-    showToast("엑셀에서 반영할 항목을 찾지 못했어요.");
+    let msg;
+    if (!plan?.uploaded?.hasInfoSheet && !plan?.uploaded?.hasAccountsSheet) {
+      msg = "업로드 파일의 시트명 또는 헤더가 올바르지 않습니다. 템플릿을 참고해주세요.";
+    } else {
+      msg = "엑셀에서 반영할 항목을 찾지 못했어요.";
+    }
+    showToast(msg);
     resetUploadInput();
     return;
   }
@@ -1025,13 +1040,13 @@ function showUploadReviewModal(plan) {
       <button class="excel-modal-close" type="button" data-upload-action="cancel" aria-label="닫기">×</button>
       <div class="excel-modal-kicker">엑셀 업로드</div>
       <h3 id="excelUploadModalTitle">엑셀 업로드 확인</h3>
-      <p class="excel-modal-desc">기존 키박스 데이터와 비교했어요. 같은 항목은 자동으로 중복 추가하지 않고, 변경된 항목만 확인 후 반영할 수 있어요.</p>
+      <p class="excel-modal-desc">기존 키박스 데이터와 비교했어요. 같은 항목과 업로드 파일 내 중복 계정은 자동으로 추가하지 않고, 변경된 항목만 확인 후 반영할 수 있어요.</p>
       <div class="excel-modal-summary" aria-label="업로드 비교 결과">
         <div><strong>${plan.counts.new}</strong><span>신규 항목</span></div>
         <div><strong>${plan.counts.changed}</strong><span>변경 가능</span></div>
         <div><strong>${plan.counts.same}</strong><span>동일 항목</span></div>
         <div><strong>${plan.counts.removed}</strong><span>삭제 예정</span></div>
-        <div><strong>${plan.counts.duplicate || 0}</strong><span>중복 항목</span></div>
+        <div><strong>${plan.counts.duplicate}</strong><span>중복 항목</span></div>
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
       <div class="excel-modal-actions">
@@ -1058,14 +1073,19 @@ function showUploadReviewModal(plan) {
       if (!ok) return;
     }
     if (selectedAction === "update" && plan.counts.removed > 0) {
-      // Provide a stronger warning when many records will be removed
-      let message;
-      if (plan.counts.removed > 9) {
-        message = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제되어 업로드된 항목만 남게 됩니다. 정말 삭제하고 동기화할까요?`;
+      // For large deletions display a more explicit warning: inform the user
+      // that only the uploaded accounts will remain after syncing.  When
+      // removed entries are fewer than 10 we keep the original concise
+      // wording.  Otherwise we emphasise that many items will be removed
+      // and only the uploaded entries will remain.
+      let confirmMsg;
+      if (plan.counts.removed >= 10) {
+        const keptTotal = plan.counts.new + plan.counts.changed + plan.counts.same;
+        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제되고, 엑셀의 ${keptTotal}개 항목만 남게 됩니다.\n정말 동기화하시겠어요?`;
       } else {
-        message = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`;
+        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`;
       }
-      const ok = confirm(message);
+      const ok = confirm(confirmMsg);
       if (!ok) return;
     }
     applyUploadPlan(plan, selectedAction);
@@ -1215,7 +1235,7 @@ async function loadJsonFile(file) {
 // ============================================================
 function clearSearch() {
   accountSearchTerm = "";
-  const accountSearchEl = document.getElementById("accountSearch");
+  const accountSearchEl = document.getElementById("searchInput");
   if (accountSearchEl) accountSearchEl.value = "";
   renderAccounts();
   renderInfoCards();
@@ -1273,12 +1293,43 @@ document.getElementById("printBtn").onclick = () => {
 };
 document.getElementById("resetBtn").onclick = resetAll;
 
-const accountSearchEl = document.getElementById("accountSearch");
+const accountSearchEl = document.getElementById("searchInput");
 if (accountSearchEl) accountSearchEl.oninput = e => {
   accountSearchTerm = e.target.value;
   renderAccounts();
   renderInfoCards();
 };
+
+
+
+// 상단 네비게이션 검색 버튼: 검색창으로 이동 후 바로 입력 가능하도록 포커스
+const searchNavButton = document.querySelector('[data-nav="search"]');
+const searchSection = document.getElementById("searchSection");
+const searchInput = document.getElementById("searchInput");
+
+function focusSearchInput() {
+  if (!searchInput) return;
+  searchInput.focus({ preventScroll: true });
+  const valueLength = searchInput.value.length;
+  try {
+    searchInput.setSelectionRange(valueLength, valueLength);
+  } catch (error) {
+    // 일부 입력 타입/브라우저에서 setSelectionRange가 제한될 수 있어 포커스만 유지합니다.
+  }
+}
+
+if (searchNavButton && searchSection && searchInput) {
+  searchNavButton.addEventListener("click", event => {
+    event.preventDefault();
+
+    searchSection.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    setTimeout(focusSearchInput, 350);
+  });
+}
 
 // 검색 지우기 / X 버튼: 동일 동작 (검색어만 삭제, 저장 데이터는 건드리지 않음)
 const clearSearchBtn = document.getElementById("clearSearchBtn");
