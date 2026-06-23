@@ -11,14 +11,14 @@
 <body>
   <header class="top-nav no-print" aria-label="상단 고정 메뉴">
     <div class="top-nav-inner">
-      <a class="top-brand" href="#searchSection" aria-label="검색 영역으로 이동">
+      <a class="top-brand" href="#searchArea" aria-label="검색 영역으로 이동">
         <span class="top-brand-icon" aria-hidden="true">🔑</span>
         <span class="top-brand-title">우리학교 키박스</span>
       </a>
 
       <!-- section-nav: 필터가 아닌 페이지 내 섹션 바로가기 링크 -->
       <nav class="top-menu" aria-label="주요 섹션 바로가기">
-        <a href="#searchSection" class="home-link search-link" data-nav="search" title="검색창으로 이동" aria-label="검색창으로 이동">🔎 검색</a>
+        <a href="#searchArea" class="home-link" title="검색 영역으로 이동" aria-label="홈(검색 영역)으로 이동">⌂ 홈</a>
         <a href="#siteSection" title="사이트 계정 위치로 이동" aria-label="사이트 계정 위치로 이동">🌐 사이트 계정</a>
         <a href="#schoolInfo" title="학교 정보 위치로 이동" aria-label="학교 정보 위치로 이동">🏫 학교 정보</a>
         <a href="#bankInfo" title="은행 계좌 위치로 이동" aria-label="은행 계좌 위치로 이동">🏦 은행 계좌</a>
@@ -46,10 +46,10 @@
       </div>
     </header>
 
-    <section id="searchSection" class="search-panel no-print">
+    <section id="searchArea" class="search-panel no-print">
       <div class="search-box">
         <span class="search-symbol">⌕</span>
-        <input id="searchInput" class="account-search" type="text" placeholder="사이트명, ID, 메모, 계좌명을 검색해보세요" autocomplete="off" />
+        <input id="accountSearch" class="account-search" type="text" placeholder="사이트명, ID, 메모, 계좌명을 검색해보세요" autocomplete="off" />
         <button id="searchXBtn" class="search-x-btn" type="button" aria-label="검색어 지우기" title="검색어 지우기">✕</button>
         <button id="clearSearchBtn" class="small-btn search-clear" type="button">검색 지우기</button>
       </div>
@@ -57,38 +57,22 @@
     </section>
 
     <section class="toolbar no-print" aria-label="관리 도구">
-      <div class="toolbar-actions toolbar-actions-full">
-        <div class="toolbar-group excel-group" aria-label="엑셀 관리">
-          <button id="exportExcelBtn" class="btn excel excel-download" type="button">⬇ 엑셀 다운</button>
-          <label class="btn excel-upload file-label">
-            ⬆ 엑셀 업로드
-            <input id="uploadInput" type="file" accept=".xlsx,.xls" hidden />
-          </label>
-        </div>
-
-        <div class="toolbar-spacer" aria-hidden="true"></div>
-
-        <div class="toolbar-group output-group" aria-label="출력">
-          <button id="printBtn" class="btn print-soft" type="button">🖨 인쇄/PDF</button>
-        </div>
-
-        <div class="toolbar-group storage-group" aria-label="PC 저장 관리">
-          <button id="loadSavedBtn" class="btn soft load-pc" type="button">PC 저장내용 불러오기</button>
-          <button id="saveBtn" class="btn save-pc" type="button">이 PC에 저장</button>
-        </div>
-
-        <details class="data-menu">
-          <summary class="btn data-menu-btn">데이터 관리</summary>
-          <div class="data-menu-panel" role="menu">
-            <button id="jsonBackupBtn" class="menu-action" type="button">JSON 백업</button>
-            <label class="menu-action file-label">
-              JSON 불러오기
-              <input id="jsonLoadInput" type="file" accept=".json,application/json" hidden />
-            </label>
-            <button id="downloadTemplateBtn" class="menu-action" type="button">기본양식 다운로드</button>
-            <button id="resetBtn" class="menu-action danger-action" type="button">저장정보 초기화</button>
-          </div>
-        </details>
+<div class="toolbar-actions toolbar-actions-full">
+        <button id="saveBtn" class="btn save-pc">이 PC에 저장</button>
+        <button id="loadSavedBtn" class="btn soft">PC 저장내용 불러오기</button>
+        <button id="printBtn" class="btn dark">인쇄/PDF</button>
+        <button id="exportExcelBtn" class="btn excel excel-download" type="button">엑셀 다운</button>
+        <label class="btn excel-upload file-label">
+          엑셀 업로드
+          <input id="uploadInput" type="file" accept=".xlsx,.xls" hidden />
+        </label>
+        <button id="downloadTemplateBtn" class="btn soft legacy-excel-tool" type="button">기본양식 다운로드</button>
+        <button id="jsonBackupBtn" class="btn soft legacy-data-tool" type="button">JSON 백업</button>
+        <label class="btn soft file-label legacy-data-tool">
+          JSON 불러오기
+          <input id="jsonLoadInput" type="file" accept=".json,application/json" hidden />
+        </label>
+        <button id="resetBtn" class="btn danger">저장정보 초기화</button>
       </div>
     </section>
 

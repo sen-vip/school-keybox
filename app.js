@@ -657,74 +657,141 @@ async function downloadTemplate() {
 }
 
 function parseUploadedWorkbook(wb) {
-  const uploadedInfo = {school:[], bank:[], card:[]};
+  // This function reads workbook sheets and returns structured info, accounts, duplicateAccounts and flags.
+  // It supports legacy sheet names and performs duplicate detection within the uploaded accounts.
+  const uploadedInfo = { school: [], bank: [], card: [] };
   let uploadedAccounts = [];
-  const hasInfoSheet = wb.SheetNames.includes("기본정보");
-  const hasAccountsSheet = wb.SheetNames.includes("계정입력");
+  const duplicateAccounts = [];
 
+  // Determine sheet names. 기본정보 is preferred for info; older files may use 학교정보.
+  const infoSheetName = wb.SheetNames.includes("기본정보")
+    ? "기본정보"
+    : wb.SheetNames.includes("학교정보")
+      ? "학교정보"
+      : null;
+  // 계정입력 is preferred for accounts; older files may use 계정정보.
+  const accSheetName = wb.SheetNames.includes("계정입력")
+    ? "계정입력"
+    : wb.SheetNames.includes("계정정보")
+      ? "계정정보"
+      : null;
+
+  const hasInfoSheet = !!infoSheetName;
+  const hasAccountsSheet = !!accSheetName;
+
+  // Parse info sheet if available
   if (hasInfoSheet) {
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets["기본정보"], {header:1, defval:""});
-    rows.slice(1).forEach(([group, label, value]) => {
-      const labelText = cleanImportText(label);
-      if (!labelText) return;
-      const g = String(group || "");
-      const key = g.includes("은행") ? "bank" : g.includes("결제") || g.includes("카드") ? "card" : "school";
-      uploadedInfo[key].push([labelText, cleanImportText(value)]);
-    });
+    try {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName], { header: 1, defval: "" });
+      rows.slice(1).forEach(([group, label, value]) => {
+        const labelText = cleanImportText(label);
+        if (!labelText) return;
+        const g = String(group || "");
+        const key = g.includes("은행")
+          ? "bank"
+          : g.includes("결제") || g.includes("카드")
+            ? "card"
+            : "school";
+        uploadedInfo[key].push([labelText, cleanImportText(value)]);
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }
 
+  // Parse accounts sheet if available
   if (hasAccountsSheet) {
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets["계정입력"], {header:1, defval:""});
-    const header = (rows[0] || []).map(x => cleanImportText(x));
-    const isOld = header[0]?.includes("분류");
-    uploadedAccounts = rows.slice(1)
-      .filter(r => cleanImportText(r[0] || r[1]) && !["…", "..."].includes(cleanImportText(r[0] || r[1])))
-      .map(r => {
-        if (isOld) return normalizeUploadedAccount({
-          category: cleanImportText(r[0] || "기타"),
-          site: normalizeSiteName(r[1] || ""),
-          id: cleanImportText(r[2]),
-          password: cleanImportText(r[3]),
-          memo: cleanImportText(r[4]),
-          url: cleanImportText(r[5]),
-          favorite: parseFavoriteValue(r[6])
+    try {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[accSheetName], { header: 1, defval: "" });
+      const header = (rows[0] || []).map(x => cleanImportText(x));
+      const isOld = header[0] && header[0].includes("분류");
+      const seenKeys = new Set();
+      uploadedAccounts = rows
+        .slice(1)
+        .filter(r => {
+          const v0 = cleanImportText(r[0] || r[1]);
+          return v0 && !["…", "..."].includes(v0);
+        })
+        .map(r => {
+          if (isOld) {
+            return normalizeUploadedAccount({
+              category: cleanImportText(r[0] || "기타"),
+              site: normalizeSiteName(r[1] || ""),
+              id: cleanImportText(r[2]),
+              password: cleanImportText(r[3]),
+              memo: cleanImportText(r[4]),
+              url: cleanImportText(r[5]),
+              favorite: parseFavoriteValue(r[6])
+            });
+          }
+          const urlCol = header.findIndex(h => /url|접속|링크|주소/i.test(h));
+          const favCol = header.findIndex(h => /즐겨|favorite/i.test(h));
+          const defaultFavCol = urlCol >= 0 ? 5 : 4;
+          return normalizeUploadedAccount({
+            category: "기타",
+            site: normalizeSiteName(r[0] || ""),
+            id: cleanImportText(r[1]),
+            password: cleanImportText(r[2]),
+            memo: cleanImportText(r[3]),
+            url: cleanImportText(urlCol >= 0 ? r[urlCol] : ""),
+            favorite: parseFavoriteValue(favCol >= 0 ? r[favCol] : r[defaultFavCol])
+          });
+        })
+        .filter(a => {
+          const s = cleanImportText(a.site);
+          if (!s || ["…", "..."].includes(s)) return false;
+          const key = [a.site, a.id, a.password, a.url].map(x => importCompareText(x)).join("||");
+          if (seenKeys.has(key)) {
+            duplicateAccounts.push(a);
+            return false;
+          }
+          seenKeys.add(key);
+          return true;
         });
-        const urlCol = header.findIndex(h => /url|접속|링크|주소/i.test(h));
-        const favCol = header.findIndex(h => /즐겨|favorite/i.test(h));
-        const defaultFavCol = urlCol >= 0 ? 5 : 4;
-        return normalizeUploadedAccount({
-          category: "기타",
-          site: normalizeSiteName(r[0] || ""),
-          id: cleanImportText(r[1]),
-          password: cleanImportText(r[2]),
-          memo: cleanImportText(r[3]),
-          url: cleanImportText(urlCol >= 0 ? r[urlCol] : ""),
-          favorite: parseFavoriteValue(favCol >= 0 ? r[favCol] : r[defaultFavCol])
-        });
-      })
-      .filter(a => cleanImportText(a.site) && !["…", "..."].includes(cleanImportText(a.site)));
+    } catch (err) {
+      console.error(err);
+    }
   } else if (wb.SheetNames.length) {
-    // 구식 "예쁜 출력" 양식 호환: 사이트 계정만 추출합니다.
+    // Fallback: Old "예쁜 출력" format
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:""});
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
     let currentCategory = "기타";
+    const seenKeysFallback = new Set();
     rows.forEach(r => {
       const b = cleanImportText(r[1]);
       if (!b || b === "사이트명" || b.includes("학교계정") || b.includes("학교 공통") || b.includes("계좌정보") || b.includes("결제 수단") || b.includes("사이트 계정 관리")) return;
-      if (/^[0-9]️⃣/.test(b)) { currentCategory = b; return; }
-      if (currentCategory !== "기타") uploadedAccounts.push(normalizeUploadedAccount({
-        category: currentCategory,
-        site: normalizeSiteName(b),
-        id: cleanImportText(r[2]),
-        password: cleanImportText(r[4]),
-        memo: cleanImportText(r[5]),
-        url: cleanImportText(r[8]),
-        favorite: false
-      }));
+      if (/^[0-9]️⃣/.test(b)) {
+        currentCategory = b;
+        return;
+      }
+      if (currentCategory !== "기타") {
+        const acc = normalizeUploadedAccount({
+          category: currentCategory,
+          site: normalizeSiteName(b),
+          id: cleanImportText(r[2]),
+          password: cleanImportText(r[4]),
+          memo: cleanImportText(r[5]),
+          url: cleanImportText(r[8]),
+          favorite: false
+        });
+        const key = [acc.site, acc.id, acc.password, acc.url].map(x => importCompareText(x)).join("||");
+        if (seenKeysFallback.has(key)) {
+          duplicateAccounts.push(acc);
+          return;
+        }
+        seenKeysFallback.add(key);
+        uploadedAccounts.push(acc);
+      }
     });
   }
 
-  return { info: uploadedInfo, accounts: normalizeAccountDefaults(uploadedAccounts), hasInfoSheet, hasAccountsSheet };
+  return {
+    info: uploadedInfo,
+    accounts: normalizeAccountDefaults(uploadedAccounts),
+    duplicateAccounts,
+    hasInfoSheet,
+    hasAccountsSheet
+  };
 }
 
 function cleanImportText(value) {
@@ -769,9 +836,10 @@ function sameAccountContent(a, b) {
 function buildUploadPlan(uploaded) {
   const plan = {
     uploaded,
-    info: {school:[], bank:[], card:[]},
+    info: { school: [], bank: [], card: [] },
     accounts: [],
-    counts: {new:0, changed:0, same:0, removed:0}
+    // Track the number of new, changed, same, removed and duplicate records
+    counts: { new: 0, changed: 0, same: 0, removed: 0, duplicate: 0 }
   };
 
   for (const key of ["school", "bank", "card"]) {
@@ -833,6 +901,10 @@ function buildUploadPlan(uploaded) {
       });
       plan.counts.removed += 1;
     });
+  }
+  // Count duplicate accounts detected during upload parsing
+  if (uploaded.duplicateAccounts && Array.isArray(uploaded.duplicateAccounts)) {
+    plan.counts.duplicate = uploaded.duplicateAccounts.length;
   }
   return plan;
 }
@@ -959,6 +1031,7 @@ function showUploadReviewModal(plan) {
         <div><strong>${plan.counts.changed}</strong><span>변경 가능</span></div>
         <div><strong>${plan.counts.same}</strong><span>동일 항목</span></div>
         <div><strong>${plan.counts.removed}</strong><span>삭제 예정</span></div>
+        <div><strong>${plan.counts.duplicate || 0}</strong><span>중복 항목</span></div>
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
       <div class="excel-modal-actions">
@@ -985,7 +1058,14 @@ function showUploadReviewModal(plan) {
       if (!ok) return;
     }
     if (selectedAction === "update" && plan.counts.removed > 0) {
-      const ok = confirm(`엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`);
+      // Provide a stronger warning when many records will be removed
+      let message;
+      if (plan.counts.removed > 9) {
+        message = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제되어 업로드된 항목만 남게 됩니다. 정말 삭제하고 동기화할까요?`;
+      } else {
+        message = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`;
+      }
+      const ok = confirm(message);
       if (!ok) return;
     }
     applyUploadPlan(plan, selectedAction);
@@ -1135,7 +1215,7 @@ async function loadJsonFile(file) {
 // ============================================================
 function clearSearch() {
   accountSearchTerm = "";
-  const accountSearchEl = document.getElementById("searchInput");
+  const accountSearchEl = document.getElementById("accountSearch");
   if (accountSearchEl) accountSearchEl.value = "";
   renderAccounts();
   renderInfoCards();
@@ -1193,43 +1273,12 @@ document.getElementById("printBtn").onclick = () => {
 };
 document.getElementById("resetBtn").onclick = resetAll;
 
-const accountSearchEl = document.getElementById("searchInput");
+const accountSearchEl = document.getElementById("accountSearch");
 if (accountSearchEl) accountSearchEl.oninput = e => {
   accountSearchTerm = e.target.value;
   renderAccounts();
   renderInfoCards();
 };
-
-
-
-// 상단 네비게이션 검색 버튼: 검색창으로 이동 후 바로 입력 가능하도록 포커스
-const searchNavButton = document.querySelector('[data-nav="search"]');
-const searchSection = document.getElementById("searchSection");
-const searchInput = document.getElementById("searchInput");
-
-function focusSearchInput() {
-  if (!searchInput) return;
-  searchInput.focus({ preventScroll: true });
-  const valueLength = searchInput.value.length;
-  try {
-    searchInput.setSelectionRange(valueLength, valueLength);
-  } catch (error) {
-    // 일부 입력 타입/브라우저에서 setSelectionRange가 제한될 수 있어 포커스만 유지합니다.
-  }
-}
-
-if (searchNavButton && searchSection && searchInput) {
-  searchNavButton.addEventListener("click", event => {
-    event.preventDefault();
-
-    searchSection.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-
-    setTimeout(focusSearchInput, 350);
-  });
-}
 
 // 검색 지우기 / X 버튼: 동일 동작 (검색어만 삭제, 저장 데이터는 건드리지 않음)
 const clearSearchBtn = document.getElementById("clearSearchBtn");
