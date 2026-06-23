@@ -1815,3 +1815,720 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
   .excel-modal-actions{grid-template-columns:1fr}
   .excel-modal-section-row{align-items:flex-start;flex-direction:column;gap:4px}
 }
+
+/* ============================================================
+   Eye-comfort background update
+   - 눈부심을 줄이기 위한 연한 웜그레이 배경/부드러운 테두리
+   - 기능 로직 변경 없음
+   ============================================================ */
+:root{
+  --bg:#F6F7F9;
+  --surface:#FFFFFF;
+  --surface-soft:#FAFBFC;
+  --line:#E5E8EE;
+  --line-soft:#EDF0F4;
+  --blue-soft:#F5F7FB;
+  --shadow:0 14px 32px rgba(15,23,42,.045);
+  --shadow-soft:0 7px 18px rgba(15,23,42,.035);
+}
+
+body{
+  background:linear-gradient(180deg,#F8F9FB 0%,#F6F7F9 48%,#F4F6F8 100%);
+}
+
+.top-nav{
+  background:rgba(255,255,255,.88);
+  border-bottom-color:#E5E8EE;
+  box-shadow:0 7px 18px rgba(15,23,42,.028);
+}
+
+.trust-badge,
+.toolbar,
+.quick-copy,
+.account-card,
+.info-card{
+  background:rgba(255,255,255,.90);
+  border-color:#E5E8EE;
+}
+
+.search-box{
+  background:#FFFFFF;
+  border-color:#D9E2EF;
+  box-shadow:0 10px 24px rgba(15,23,42,.045), 0 0 0 3px rgba(148,163,184,.08);
+}
+.search-box:hover{
+  border-color:#C8D6E8;
+  box-shadow:0 12px 28px rgba(15,23,42,.055), 0 0 0 3px rgba(148,163,184,.10);
+}
+.search-box:focus-within{
+  border-color:#8FB4EA;
+  box-shadow:0 14px 32px rgba(37,99,235,.11), 0 0 0 4px rgba(143,180,234,.16);
+}
+.search-symbol{
+  background:#F5F7FB;
+  color:#315BB8;
+}
+
+.btn.soft,
+.small-btn,
+.segmented label,
+.quick-item,
+.flat-table,
+.excel-modal-summary div{
+  background:#FFFFFF;
+  border-color:#E5E8EE;
+}
+
+.main-account-card{
+  background:linear-gradient(180deg,#FFFFFF 0%,#FAFBFC 180px);
+  border-color:#E5E8EE;
+}
+
+th{
+  background:#FAFBFC;
+}
+tr:hover td{
+  background:#FAFBFC;
+}
+.empty,.empty-mini{
+  background:#FAFBFC;
+  border-color:#DDE4EE;
+}
+
+.table-input,.inline-input,.label-input,.memo-sub,
+.account-search{
+  background:transparent;
+}
+.table-input:focus,.inline-input:focus,.label-input:focus,
+tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input{
+  background:#FAFBFC;
+  border-color:#D9E2EF;
+  box-shadow:0 0 0 3px rgba(148,163,184,.10);
+}
+
+.info-school{background:linear-gradient(180deg,#F7FCF9 0%,#FFFFFF 130px);border-color:#DCECE3}
+.info-bank{background:linear-gradient(180deg,#FAF8FC 0%,#FFFFFF 130px);border-color:#E7E0F0}
+.info-pay{background:linear-gradient(180deg,#FFFCF2 0%,#FFFFFF 130px);border-color:#EFE4BC}
+
+
+/* ============================================================
+   Refine site account inner area
+   - 사이트 계정 내부가 너무 밝아 보이는 문제 완화
+   - 표 영역에 부드러운 회청톤 레이어 추가
+   ============================================================ */
+.main-account-card{
+  background:linear-gradient(180deg,#FCFCFD 0%,#F7F8FA 190px);
+  border-color:#E2E8F0;
+}
+
+#siteSection .section-title{
+  padding-bottom:14px;
+}
+
+#siteSection .flat-table{
+  background:#F5F7FA;
+  border-color:#DDE5EE;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+#siteSection th{
+  background:#EEF2F7;
+  color:#667487;
+  border-bottom-color:#E2E8F0;
+}
+
+#siteSection td{
+  background:#FBFCFD;
+  border-bottom-color:#EDF2F6;
+}
+#siteSection tbody tr:nth-child(even) td{
+  background:#F8FAFC;
+}
+#siteSection tr:hover td{
+  background:#F1F5F9;
+}
+
+#siteSection .table-input,
+#siteSection .memo-sub,
+#siteSection .open-url-btn,
+#siteSection .site-sub{
+  color:#4B5A6D;
+}
+
+#siteSection .site-badge{
+  background:#F2F4F7;
+  border-color:#E2E8F0;
+}
+
+#siteSection .copy-chip{
+  background:#EAF1FB;
+}
+
+/* ============================================================
+   Unified section tone update
+   - 토스 느낌을 억지로 만들지 않고, 섹션별 톤을 하나의 회백색 계열로 통일
+   - 기능 로직 변경 없음
+   ============================================================ */
+:root{
+  --bg:#F5F6F8;
+  --surface:#FFFFFF;
+  --surface-soft:#F8F9FB;
+  --section-soft:#F7F8FA;
+  --section-head:#F1F4F7;
+  --line:#E1E6EE;
+  --line-soft:#EDF1F5;
+  --text:#172033;
+  --muted:#68768A;
+  --blue-soft:#EEF4FB;
+  --shadow:0 14px 30px rgba(15,23,42,.04);
+  --shadow-soft:0 7px 16px rgba(15,23,42,.03);
+}
+
+body{
+  background:linear-gradient(180deg,#F7F8FA 0%,#F5F6F8 48%,#F3F5F7 100%);
+  color:var(--text);
+}
+
+/* 상단/공통 카드 톤 */
+.top-nav{
+  background:rgba(255,255,255,.90);
+  border-bottom-color:#E1E6EE;
+  box-shadow:0 7px 18px rgba(15,23,42,.026);
+}
+
+.toolbar,
+.quick-copy,
+.account-card,
+.info-card,
+.trust-badge{
+  background:#FFFFFF;
+  border-color:#E1E6EE;
+  box-shadow:0 14px 30px rgba(15,23,42,.035);
+}
+
+/* 섹션 카드 내부 톤 통일 */
+.main-account-card,
+.info-card{
+  background:linear-gradient(180deg,#FFFFFF 0%,#F8F9FB 180px) !important;
+  border-color:#E1E6EE !important;
+}
+
+.section-title,
+.info-card-head{
+  border-bottom-color:#EEF2F6;
+}
+
+.section-title h2,
+.info-card h2{
+  color:#172033;
+}
+
+.section-desc,
+.info-sub,
+.account-title-side p{
+  color:#68768A;
+}
+
+/* 사이트 계정 표 */
+#siteSection .flat-table,
+.flat-table{
+  background:#F7F8FA;
+  border-color:#DEE5ED;
+}
+
+#siteSection th,
+th{
+  background:#F1F4F7;
+  color:#5F6F83;
+  border-bottom-color:#E1E7EF;
+}
+
+#siteSection td,
+td{
+  background:#FFFFFF;
+  border-bottom-color:#EEF2F6;
+}
+
+#siteSection tbody tr:nth-child(even) td{
+  background:#FAFBFC;
+}
+
+#siteSection tr:hover td,
+tr:hover td{
+  background:#F5F7FA;
+}
+
+/* 입력/메모/검색 */
+.table-input,
+.inline-input,
+.label-input,
+.memo-sub,
+.account-search{
+  color:#172033;
+}
+
+.table-input:focus,
+.inline-input:focus,
+.label-input:focus,
+tr:hover .table-input,
+.info-row:hover .inline-input,
+.info-row:hover .label-input{
+  background:#F8FAFC;
+  border-color:#D3DCE8;
+  box-shadow:0 0 0 3px rgba(100,116,139,.09);
+}
+
+.search-box{
+  background:#FFFFFF;
+  border-color:#D8E0EA;
+  box-shadow:0 10px 22px rgba(15,23,42,.04), 0 0 0 3px rgba(100,116,139,.055);
+}
+
+.search-symbol{
+  background:#F1F4F8;
+  color:#315A9F;
+}
+
+/* 배지와 복사칩 톤 */
+.site-badge,
+#siteSection .site-badge{
+  background:#F3F5F8;
+  border-color:#E1E6EE;
+  color:#334155;
+}
+
+.copy-chip,
+#siteSection .copy-chip{
+  background:#EEF4FB;
+  color:#0F5CC8;
+}
+
+/* 학교정보/은행/결제 섹션도 서로 튀지 않게 통일 */
+.info-school,
+.info-bank,
+.info-pay{
+  background:linear-gradient(180deg,#FFFFFF 0%,#F8F9FB 150px) !important;
+  border-color:#E1E6EE !important;
+}
+
+.info-row{
+  border-bottom-color:#EEF2F6;
+}
+
+.info-row:hover{
+  background:#F8FAFC;
+}
+
+.copy-pill{
+  background:#F3F5F8;
+  border-color:#E1E6EE;
+}
+
+.copy-pill.copy-icon-only:hover{
+  background:#EEF4FB;
+}
+
+/* 빠른복사 카드도 같은 결 */
+.quick-item{
+  background:#FFFFFF;
+  border-color:#E1E6EE;
+}
+
+.quick-item:hover{
+  background:#F8FAFC;
+  border-color:#D6DEE9;
+}
+
+/* 빈 상태/안내 박스 */
+.empty,
+.empty-mini,
+.section-no-result{
+  background:#F8FAFC;
+  border-color:#E1E6EE;
+  color:#68768A;
+}
+
+/* ============================================================
+   Typography comfort update
+   - 배경색 추가 변경 없이 안쪽 글씨 위계/색상/굵기 정리
+   - 사이트명은 또렷하게, 값/메모/보조문구는 한 톤 부드럽게
+   - 기능 로직 변경 없음
+   ============================================================ */
+
+/* 전체 기본 텍스트를 완전 검정이 아닌 차분한 진회색으로 */
+body{
+  color:#1F2937;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* 섹션 제목은 또렷하되 너무 두껍지 않게 */
+.section-title h2,
+.info-card h2{
+  color:#172033;
+  font-weight:700;
+  letter-spacing:-0.035em;
+}
+
+/* 사이트명: 1순위 정보 */
+.site-input{
+  color:#172033 !important;
+  font-weight:600 !important;
+  letter-spacing:-0.025em;
+}
+
+/* ID/PW 값: 2순위 정보라서 검정에서 진회색으로 낮춤 */
+.table-input{
+  color:#374151 !important;
+  font-weight:400 !important;
+  letter-spacing:-0.015em;
+}
+
+/* 사이트 설명/메모: 3순위 정보 */
+.memo-sub,
+.site-sub,
+.section-desc,
+.info-sub,
+.account-title-side p,
+.search-hint{
+  color:#6B7280 !important;
+  font-weight:400 !important;
+}
+
+/* placeholder는 더 조용하게 */
+.table-input::placeholder,
+.inline-input::placeholder,
+.label-input::placeholder,
+.account-search::placeholder{
+  color:#A8B2C0 !important;
+  font-weight:400 !important;
+}
+
+/* 표 헤더: 안내 역할이므로 작고 차분하게 */
+th{
+  color:#64748B !important;
+  font-weight:600 !important;
+  letter-spacing:-0.01em;
+}
+
+/* 표 안쪽 기본 셀 텍스트 과한 대비 완화 */
+td{
+  color:#374151 !important;
+  font-weight:400 !important;
+}
+
+/* 링크/열기 버튼은 보조 액션처럼 낮춤 */
+.open-url-btn{
+  color:#718096 !important;
+  font-weight:500 !important;
+}
+.open-url-btn:hover{
+  color:#315A9F !important;
+}
+
+/* ID/PW 칩: 파란색은 유지하되 채도와 존재감 완화 */
+.copy-chip{
+  color:#1D5DBE !important;
+  background:#EEF4FB !important;
+  font-weight:600 !important;
+  box-shadow:none !important;
+}
+
+/* 원형 사이트 배지는 튀지 않게 */
+.site-badge{
+  color:#475569 !important;
+  font-weight:600 !important;
+}
+
+/* 즐겨찾기/이동 아이콘은 더 조용하게 */
+.favorite-cell,
+.drag-cell,
+.drag-handle{
+  color:#A6B2C2 !important;
+}
+
+/* 학교정보/은행/결제 정보값도 같은 위계로 통일 */
+.inline-input,
+.label-input{
+  color:#374151 !important;
+  font-weight:400 !important;
+}
+
+.info-row label,
+.info-label{
+  color:#64748B !important;
+  font-weight:600 !important;
+}
+
+/* 검색 결과/카운트 텍스트도 과한 대비 완화 */
+.search-result-info,
+.count-badge,
+.small-muted{
+  color:#68768A !important;
+  font-weight:500 !important;
+}
+
+
+/* ============================================================
+   v3.0 toolbar regrouping: excel / print / PC storage / data menu
+   ============================================================ */
+.top-brand-icon{
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font-size:20px!important;
+  line-height:1;
+}
+
+.toolbar-actions-full{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:0;
+}
+.toolbar-group{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  flex:0 0 auto;
+}
+.toolbar-spacer{
+  flex:1 1 auto;
+  min-width:24px;
+}
+.btn.print-soft{
+  background:#fff;
+  border-color:#D8DEE8;
+  color:#475569;
+  box-shadow:none!important;
+}
+.btn.print-soft:hover{
+  background:#F8FAFC;
+  border-color:#CBD5E1;
+  color:#334155;
+}
+.btn.load-pc{
+  border-color:#D8E6FB;
+  color:#315BB8;
+}
+.btn.load-pc:hover{
+  background:#F7FAFF;
+  border-color:#BCD4F6;
+}
+.data-menu{
+  position:relative;
+  flex:0 0 auto;
+}
+.data-menu summary{
+  list-style:none;
+  cursor:pointer;
+}
+.data-menu summary::-webkit-details-marker{display:none}
+.btn.data-menu-btn{
+  background:#fff;
+  border-color:#E5E8EE;
+  color:#64748B;
+  box-shadow:none!important;
+}
+.btn.data-menu-btn::after{
+  content:"▾";
+  margin-left:7px;
+  font-size:11px;
+  color:#94A3B8;
+}
+.data-menu[open] .data-menu-btn,
+.btn.data-menu-btn:hover{
+  background:#F8FAFC;
+  border-color:#D8DEE8;
+  color:#475569;
+}
+.data-menu-panel{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  z-index:40;
+  min-width:190px;
+  padding:8px;
+  border:1px solid #E5E8EE;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 14px 34px rgba(15,23,42,.12);
+}
+.menu-action{
+  width:100%;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding:0 12px;
+  border:0;
+  border-radius:11px;
+  background:#fff;
+  color:#475569;
+  font:inherit;
+  font-size:13.5px;
+  font-weight:520;
+  letter-spacing:-.012em;
+  cursor:pointer;
+  text-align:left;
+}
+.menu-action:hover{background:#F8FAFC;color:#334155}
+.menu-action.danger-action{color:#E5484D}
+.menu-action.danger-action:hover{background:#FFF6F6;color:#D92D3A}
+
+@media (max-width: 760px){
+  .toolbar-actions-full{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .toolbar-group{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .output-group,
+  .data-menu{display:block;width:100%}
+  .toolbar-spacer{display:none}
+  .toolbar .btn,
+  .data-menu-btn{width:100%}
+  .data-menu-panel{position:static;margin-top:8px;box-shadow:none}
+}
+
+/* ============================================================
+   v3.0.1 typography hierarchy: 눈 편한 3단계 글자 위계
+   - 주요 정보: 또렷하게
+   - 보조 정보: 차분하게
+   - 라벨/헤더: 조용하지만 읽히게
+   ============================================================ */
+:root{
+  --text-strong:#1E293B;
+  --text-value:#334155;
+  --text-soft:#64748B;
+  --text-weak:#94A3B8;
+}
+
+body{
+  color:var(--text-strong);
+}
+
+/* 1순위: 섹션 제목 / 사이트명 / 빠른복사 이름 */
+.section-title h2,
+.info-card h2,
+.quick-copy-head strong,
+.site-input,
+.quick-item strong{
+  color:var(--text-strong) !important;
+  font-weight:600 !important;
+  letter-spacing:-.035em;
+}
+
+.section-title h2,
+.info-card h2,
+.quick-copy-head strong{
+  font-weight:700 !important;
+}
+
+/* 1.5순위: 실제로 복사해서 쓰는 값(ID/PW/정보값) */
+.account-copy-cell .table-input,
+.inline-input{
+  color:var(--text-value) !important;
+  font-weight:540 !important;
+  letter-spacing:-.012em;
+}
+
+/* 사이트명 입력칸은 값보다 한 단계 더 먼저 보이게 유지 */
+.site-input{
+  color:var(--text-strong) !important;
+  font-weight:600 !important;
+}
+
+/* 2순위: 설명, 메모, 카운트, 열기 등 보조 정보 */
+.memo-sub,
+.section-desc,
+.info-sub,
+.account-title-side p,
+.quick-copy-head span,
+.search-result-info,
+.small-muted,
+.open-url-btn{
+  color:var(--text-soft) !important;
+  font-weight:430 !important;
+}
+
+.memo-sub{
+  font-weight:400 !important;
+  line-height:1.48;
+}
+
+/* 3순위: 헤더/라벨/placeholder는 조용하게 정돈 */
+th,
+.info-row label,
+.info-label,
+.label-input{
+  color:var(--text-soft) !important;
+  font-weight:560 !important;
+  letter-spacing:-.01em;
+}
+
+.table-input::placeholder,
+.inline-input::placeholder,
+.label-input::placeholder,
+.memo-sub::placeholder,
+.account-search::placeholder{
+  color:var(--text-weak) !important;
+  font-weight:400 !important;
+}
+
+/* 표 본문은 검정보다 부드러운 차콜로 통일 */
+td{
+  color:var(--text-value) !important;
+  font-weight:400 !important;
+}
+
+/* ID/PW 칩은 라벨로만 보이게, 실제 값보다 튀지 않게 */
+.copy-chip,
+.copy-btn,
+.copy-pill{
+  color:#1D5DBE !important;
+  background:#EEF4FB !important;
+  border-color:#EEF4FB !important;
+  font-weight:600 !important;
+}
+.copy-chip:hover,
+.copy-btn:hover,
+.copy-pill:hover{
+  background:#E6F0FF !important;
+  border-color:#E6F0FF !important;
+  color:#1D5DBE !important;
+}
+
+/* 보조 아이콘들은 선명하지만 시선은 덜 빼앗기게 */
+.site-badge{
+  color:#475569 !important;
+  font-weight:600 !important;
+}
+.star-btn,
+.quick-star,
+.drag-handle{
+  color:#A8B4C4 !important;
+  opacity:.78;
+}
+.star-btn.on,
+.quick-star.on{
+  color:#F59E0B !important;
+  opacity:1;
+}
+
+/* 검색 입력은 흐리지 않게 */
+.account-search{
+  color:var(--text-value) !important;
+  font-weight:430 !important;
+}
