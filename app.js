@@ -1135,7 +1135,7 @@ async function loadJsonFile(file) {
 // ============================================================
 function clearSearch() {
   accountSearchTerm = "";
-  const accountSearchEl = document.getElementById("accountSearch");
+  const accountSearchEl = document.getElementById("searchInput");
   if (accountSearchEl) accountSearchEl.value = "";
   renderAccounts();
   renderInfoCards();
@@ -1193,12 +1193,43 @@ document.getElementById("printBtn").onclick = () => {
 };
 document.getElementById("resetBtn").onclick = resetAll;
 
-const accountSearchEl = document.getElementById("accountSearch");
+const accountSearchEl = document.getElementById("searchInput");
 if (accountSearchEl) accountSearchEl.oninput = e => {
   accountSearchTerm = e.target.value;
   renderAccounts();
   renderInfoCards();
 };
+
+
+
+// 상단 네비게이션 검색 버튼: 검색창으로 이동 후 바로 입력 가능하도록 포커스
+const searchNavButton = document.querySelector('[data-nav="search"]');
+const searchSection = document.getElementById("searchSection");
+const searchInput = document.getElementById("searchInput");
+
+function focusSearchInput() {
+  if (!searchInput) return;
+  searchInput.focus({ preventScroll: true });
+  const valueLength = searchInput.value.length;
+  try {
+    searchInput.setSelectionRange(valueLength, valueLength);
+  } catch (error) {
+    // 일부 입력 타입/브라우저에서 setSelectionRange가 제한될 수 있어 포커스만 유지합니다.
+  }
+}
+
+if (searchNavButton && searchSection && searchInput) {
+  searchNavButton.addEventListener("click", event => {
+    event.preventDefault();
+
+    searchSection.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    setTimeout(focusSearchInput, 350);
+  });
+}
 
 // 검색 지우기 / X 버튼: 동일 동작 (검색어만 삭제, 저장 데이터는 건드리지 않음)
 const clearSearchBtn = document.getElementById("clearSearchBtn");
