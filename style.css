@@ -2840,6 +2840,464 @@ td{
   }
 }
 
+
+/* ============================================================
+   v3.0.4 Mobile usability refinement
+   - screen-only rules so print layout stays separated
+   - compact top controls, touch-friendly quick copy and account cards
+   ============================================================ */
+@media screen and (max-width: 768px){
+  html{
+    scroll-padding-top:112px;
+  }
+  body{
+    max-width:100%;
+    overflow-x:hidden;
+  }
+  .app{
+    width:min(100% - 22px, 1220px) !important;
+    margin-top:14px !important;
+  }
+
+  /* Top navigation: keep only the useful section pills visible and scrollable */
+  .top-nav-inner{
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+    padding:10px 0 !important;
+  }
+  .top-brand{
+    font-size:15px !important;
+    gap:7px !important;
+  }
+  .top-brand-icon{
+    font-size:18px !important;
+  }
+  .top-menu{
+    width:100% !important;
+    display:flex !important;
+    gap:7px !important;
+    justify-content:flex-start !important;
+    overflow-x:auto !important;
+    padding:2px 0 3px !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .top-menu::-webkit-scrollbar{display:none}
+  .top-menu a{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:0 12px !important;
+    border-radius:14px !important;
+    font-size:13px !important;
+    font-weight:650 !important;
+    white-space:nowrap !important;
+  }
+  .top-github{
+    display:none !important;
+  }
+
+  /* Hero and search: reduce vertical pressure on the first screen */
+  .hero{
+    padding:18px 4px 12px !important;
+    gap:10px !important;
+  }
+  h1{
+    font-size:29px !important;
+    line-height:1.14 !important;
+    letter-spacing:-.065em !important;
+  }
+  h1 .key-emoji{
+    font-size:28px !important;
+  }
+  .desc{
+    font-size:13.5px !important;
+    margin-top:8px !important;
+  }
+  .hero-right{
+    gap:7px !important;
+  }
+  .trust-badges{
+    width:100% !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:6px !important;
+  }
+  .trust-badge{
+    min-height:30px !important;
+    justify-content:center !important;
+    font-size:11.5px !important;
+  }
+  .version-mini{
+    align-self:flex-end !important;
+    font-size:11px !important;
+  }
+  .search-panel{
+    padding:0 !important;
+    border-radius:18px !important;
+  }
+  .search-box{
+    grid-template-columns:32px minmax(0,1fr) 28px !important;
+    min-height:48px !important;
+    padding:7px 9px !important;
+    gap:6px !important;
+  }
+  .account-search{
+    min-width:0 !important;
+    font-size:13px !important;
+  }
+  .search-clear{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-height:34px !important;
+    margin-top:3px !important;
+  }
+
+  /* Toolbar: storage first, then excel/print/data as support actions */
+  .toolbar{
+    padding:12px !important;
+    border-radius:20px !important;
+  }
+  .toolbar-actions-full{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:8px !important;
+    align-items:stretch !important;
+    width:100% !important;
+  }
+  .toolbar-spacer{display:none !important}
+  .toolbar-group{
+    width:100% !important;
+    min-width:0 !important;
+    display:grid !important;
+    gap:8px !important;
+  }
+  .storage-group{
+    order:1 !important;
+    grid-column:1 / -1 !important;
+    grid-template-columns:1fr !important;
+  }
+  #saveBtn{order:1 !important}
+  #loadSavedBtn{order:2 !important}
+  .excel-group{
+    order:2 !important;
+    grid-column:1 !important;
+    grid-template-columns:1fr !important;
+  }
+  .output-group{
+    order:3 !important;
+    grid-column:2 !important;
+    display:block !important;
+  }
+  .data-menu{
+    order:4 !important;
+    grid-column:1 / -1 !important;
+    display:block !important;
+    width:100% !important;
+  }
+  .toolbar .btn,
+  .data-menu-btn{
+    width:100% !important;
+    min-height:42px !important;
+    justify-content:center !important;
+    padding:0 10px !important;
+    border-radius:14px !important;
+    font-size:13px !important;
+    white-space:nowrap !important;
+  }
+  .data-menu-panel{
+    position:static !important;
+    width:100% !important;
+    margin-top:8px !important;
+    box-shadow:none !important;
+    border-radius:15px !important;
+  }
+  .menu-action{
+    min-height:40px !important;
+    font-size:13px !important;
+  }
+
+  /* Quick copy: one-column cards with touch-friendly buttons */
+  .quick-copy{
+    padding:18px 14px !important;
+    border-radius:22px !important;
+  }
+  .quick-copy-head{
+    align-items:flex-start !important;
+    gap:6px !important;
+  }
+  .quick-copy-head strong{
+    font-size:17px !important;
+  }
+  .quick-copy-head span{
+    font-size:12px !important;
+  }
+  .quick-grid{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  .quick-item{
+    min-height:64px !important;
+    height:auto !important;
+    padding:12px !important;
+    gap:9px !important;
+    border-radius:16px !important;
+  }
+  .quick-item .site-label{
+    gap:9px !important;
+  }
+  .quick-item .site-label > div{
+    max-width:none !important;
+  }
+  .quick-item strong{
+    font-size:14px !important;
+  }
+  .quick-actions{
+    gap:6px !important;
+  }
+  .quick-item .copy-pill,
+  .quick-item .copy-btn,
+  .copy-chip{
+    min-width:38px !important;
+    min-height:36px !important;
+    height:36px !important;
+    padding:0 12px !important;
+    border-radius:13px !important;
+    font-size:12px !important;
+    font-weight:800 !important;
+  }
+  .quick-star{
+    min-width:36px !important;
+    width:36px !important;
+    height:36px !important;
+    min-height:36px !important;
+  }
+
+  /* Site accounts: mobile card list, not a squeezed table */
+  #siteSection.main-account-card{
+    padding:18px 14px !important;
+    border-radius:22px !important;
+  }
+  #siteSection .section-title{
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:10px !important;
+    padding-bottom:12px !important;
+  }
+  #siteSection .account-title > div:first-child{
+    align-items:flex-start !important;
+  }
+  #siteSection .account-title-side{
+    justify-content:flex-start !important;
+  }
+  #siteSection .section-title h2{
+    font-size:20px !important;
+  }
+  #siteSection .section-desc{
+    font-size:12.5px !important;
+    color:#64748b !important;
+    font-weight:500 !important;
+  }
+  #siteSection .mini-actions .btn{
+    min-height:34px !important;
+    padding:0 11px !important;
+    font-size:12px !important;
+  }
+  #siteSection .flat-table{
+    overflow:visible !important;
+    border-radius:18px !important;
+    border-color:#edf2f7 !important;
+  }
+  #siteSection .flat-table table,
+  #siteSection .flat-table tbody{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  #siteSection .flat-table colgroup,
+  #siteSection .flat-table thead{
+    display:none !important;
+  }
+  #siteSection .flat-table tr{
+    display:grid !important;
+    grid-template-columns:30px minmax(0,1fr) !important;
+    gap:0 8px !important;
+    padding:14px 10px !important;
+    border-bottom:1px solid #eef2f6 !important;
+    background:#fff !important;
+  }
+  #siteSection .flat-table tr:nth-child(even){background:#fafbfc !important}
+  #siteSection .flat-table td,
+  #siteSection .flat-table tr:hover td,
+  #siteSection tbody tr:nth-child(even) td{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+  }
+  #siteSection .favorite-cell{
+    grid-column:1 !important;
+    grid-row:1 / span 3 !important;
+    width:30px !important;
+    min-width:30px !important;
+    padding-top:4px !important;
+    text-align:center !important;
+  }
+  #siteSection .star-btn{
+    width:30px !important;
+    height:30px !important;
+    min-width:30px !important;
+    min-height:30px !important;
+    font-size:15px !important;
+  }
+  #siteSection td.site{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+  #siteSection .account-site-label,
+  #siteSection .site-label{
+    gap:9px !important;
+    align-items:flex-start !important;
+  }
+  #siteSection .site-badge{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    font-size:13px !important;
+  }
+  #siteSection .site-texts{
+    min-width:0 !important;
+    gap:4px !important;
+  }
+  #siteSection .site-main-line{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:7px !important;
+  }
+  #siteSection .site-input{
+    height:auto !important;
+    min-height:28px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:#0f172a !important;
+    font-size:15px !important;
+    font-weight:650 !important;
+    line-height:1.35 !important;
+  }
+  #siteSection .memo-sub{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:38px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:#64748b !important;
+    font-size:12.5px !important;
+    line-height:1.45 !important;
+    white-space:normal !important;
+    overflow:hidden !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  #siteSection .open-url-btn{
+    min-height:30px !important;
+    padding:0 10px !important;
+    border:1px solid #dbe5f0 !important;
+    border-radius:999px !important;
+    background:#fff !important;
+    color:#475569 !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+  }
+  #siteSection td:has(.account-copy-cell){
+    grid-column:2 !important;
+    margin-top:8px !important;
+  }
+  #siteSection .account-copy-cell{
+    display:grid !important;
+    grid-template-columns:42px minmax(0,1fr) !important;
+    gap:7px !important;
+    align-items:center !important;
+    max-width:100% !important;
+  }
+  #siteSection .account-copy-cell .copy-chip{
+    width:auto !important;
+    min-width:42px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 10px !important;
+    border-radius:999px !important;
+    font-size:12px !important;
+  }
+  #siteSection .account-copy-cell .table-input{
+    width:100% !important;
+    min-width:0 !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:5px 9px !important;
+    border-radius:11px !important;
+    font-size:13px !important;
+    background:#fff !important;
+    border-color:#eef2f6 !important;
+  }
+  #siteSection .drag-cell,
+  #siteSection .drag-handle{
+    display:none !important;
+  }
+
+  /* Info sections: compact one-column reading and full-width inputs */
+  .info-layout{
+    grid-template-columns:1fr !important;
+    gap:14px !important;
+  }
+  .info-card,
+  .info-card.wide{
+    grid-column:auto !important;
+    padding:18px 14px !important;
+    border-radius:22px !important;
+  }
+  .info-card-head{
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:10px !important;
+  }
+  .info-card h2{
+    font-size:19px !important;
+  }
+  .info-sub{
+    font-size:12.5px !important;
+    color:#64748b !important;
+    font-weight:500 !important;
+  }
+  .info-grid.school-grid,
+  .school-extra{
+    display:block !important;
+    grid-template-columns:1fr !important;
+    column-gap:0 !important;
+  }
+  .info-row,
+  .info-row.selecting{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:6px !important;
+    min-height:0 !important;
+    padding:10px 0 !important;
+  }
+  .label-input,
+  .inline-input{
+    width:100% !important;
+    min-width:0 !important;
+    height:36px !important;
+    min-height:36px !important;
+    font-size:13px !important;
+  }
+}
+
 /* ============================================================
    Final print table override
    - Must stay at the very end of the file so mobile responsive rules
