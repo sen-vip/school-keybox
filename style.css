@@ -1677,6 +1677,20 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
   .info-grid.school-grid{grid-template-columns:repeat(2,1fr)!important;column-gap:8px!important}
   .info-row,.info-row.selecting{grid-template-columns:38% 1fr!important;padding:4px 0!important;min-height:22px!important;gap:4px!important}
   .school-extra{grid-template-columns:repeat(2,1fr)!important;margin-top:4px!important;padding-top:4px!important;column-gap:8px!important}
+
+  /* Override account row styles for print. In the default styles each
+     account row (#siteSection .flat-table tr) is implemented as a CSS
+     grid with generous padding and column gaps.  When printing, grid
+     containers cannot be split across pages, which causes each row to
+     force a page break after itself and results in large blank areas.
+     Reset the row to behave like a normal table row with minimal
+     padding so multiple entries fit on a page without huge gaps. */
+  #siteSection .flat-table tr{
+    display: table-row !important;
+    padding: 4.8px 6px !important;
+    column-gap: 0 !important;
+    row-gap: 0 !important;
+  }
 }
 
 /* ============================================================
@@ -2823,5 +2837,152 @@ td{
 
   #siteSection .delete-mode .favorite-cell{
     display:none;
+  }
+}
+
+/* ============================================================
+   Final print table override
+   - Must stay at the very end of the file so mobile responsive rules
+     do not override the print layout.
+   ============================================================ */
+@media print {
+  #siteSection .flat-table,
+  #siteSection .flat-table table{
+    overflow: visible !important;
+  }
+
+  #siteSection .flat-table table{
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  #siteSection .flat-table col.no-print,
+  #siteSection .flat-table th.no-print,
+  #siteSection .flat-table td.no-print,
+  #siteSection .flat-table .no-print{
+    display: none !important;
+    width: 0 !important;
+  }
+
+  #siteSection .flat-table thead{
+    display: table-header-group !important;
+  }
+
+  #siteSection .flat-table tbody{
+    display: table-row-group !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  #siteSection .flat-table tr{
+    display: table-row !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border-bottom: 0 !important;
+    background: #fff !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  #siteSection .flat-table th,
+  #siteSection .flat-table td{
+    display: table-cell !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 4.5px 6px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #edf1f5 !important;
+    background: #fff !important;
+  }
+
+  #siteSection .flat-table th{
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+  }
+
+  #siteSection .flat-table td.site{
+    width: 42% !important;
+  }
+
+  #siteSection .site-label,
+  #siteSection .account-site-label{
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+  }
+
+  #siteSection .site-texts{
+    display: block !important;
+    min-width: 0 !important;
+  }
+
+  #siteSection .site-main-line{
+    display: block !important;
+  }
+
+  #siteSection .account-copy-cell{
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    max-width: none !important;
+  }
+
+  #siteSection .table-input,
+  #siteSection .inline-input,
+  #siteSection .label-input,
+  #siteSection .memo-sub{
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    resize: none !important;
+  }
+
+  #siteSection .site-input{
+    font-size: 8.8px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    color: #111827 !important;
+  }
+
+  #siteSection .memo-sub{
+    font-size: 7.6px !important;
+    line-height: 1.25 !important;
+    color: #64748b !important;
+  }
+
+  #siteSection .account-copy-cell .table-input{
+    font-size: 8.4px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    color: #111827 !important;
+  }
+
+  #siteSection .site-badge{
+    flex: 0 0 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    font-size: 7.5px !important;
   }
 }
