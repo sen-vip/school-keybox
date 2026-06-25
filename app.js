@@ -7,12 +7,12 @@ const STORAGE_KEY = "hakdolSchoolKeyboxV30";
 
 const DEFAULT_INFO = {
   "school": [
-    ["학교 메일", "[EMAIL]"],
+    ["학교 메일", "school@sen.go.kr"],
     ["사업자등록번호", "123-45-67890"],
     ["학교 기관코드", "12312123"],
     ["나이스 조직코드", "B100000000"],
-    ["특수목적 인증서(메일)", "123123"],
-    ["전자관인 인증서", "12312313"],
+    ["특수목적 인증서(메일)", "••••••••"],
+    ["전자관인 인증서", "••••••••"],
     ["학교장터 인증서", "••••••••"],
     ["가통서비스 ID", "school"],
     ["가통서비스 PW", "••••••••"],
@@ -23,8 +23,8 @@ const DEFAULT_INFO = {
   ],
   "bank": [
     ["학교회계계좌", "000-00-00000"],
-    ["카드계좌", "••••••••"],
-    ["세외계좌", "••••••••"],
+    ["카드계좌", "000-00-00000"],
+    ["세외계좌", "000-00-00000"],
     ["계좌PW", "••••"],
     ["은행인증서(실장)", "••••••••"],
     ["ㄴ자금이체 PW", "••••••"],
@@ -53,9 +53,9 @@ const DEFAULT_INFO = {
 
 const DEFAULT_ACCOUNTS = [
   { category:"기타", site:"나라장터", id:"개인인증서", password:"개인인증서 비번", memo:"G2B | 조달청", url:"https://www.g2b.go.kr", favorite:false },
-  { category:"기타", site:"학교장터", id:"-", password:"••••••••", memo:"S2B | 인증서: oooo", url:"https://www.s2b.kr", favorite:false },
-  { category:"기타", site:"지마켓", id:"school", password:"school1234", memo:"G마켓 | 새벽배송 불가", url:"https://www.gmarket.co.kr", favorite:true },
-  { category:"기타", site:"11번가", id:"school", password:"school1234", memo:"", url:"https://www.11st.co.kr", favorite:true },
+  { category:"기타", site:"학교장터", id:"school", password:"12345678", memo:"S2B | 인증서: oooo", url:"https://www.s2b.kr", favorite:false },
+  { category:"기타", site:"지마켓", id:"school", password:"12345678", memo:"G마켓 | 새벽배송 불가", url:"https://www.gmarket.co.kr", favorite:true },
+  { category:"기타", site:"11번가", id:"school", password:"12345678", memo:"", url:"https://www.11st.co.kr", favorite:true },
   { category:"기타", site:"알라딘", id:"-", password:"••••••••", memo:"", url:"https://www.aladin.co.kr", favorite:false },
   { category:"기타", site:"예스24", id:"-", password:"••••••••", memo:"YES24", url:"https://www.yes24.com", favorite:false },
   { category:"기타", site:"SSG닷컴", id:"-", password:"••••••••", memo:"SSG.com, 에스에스지닷컴 | 새벽배송 불가(자동취소됨)", url:"https://www.ssg.com", favorite:false },
@@ -70,8 +70,8 @@ const DEFAULT_ACCOUNTS = [
   { category:"기타", site:"농협뱅킹", id:"-", password:"••••••••", memo:"NH뱅킹", url:"https://banking.nonghyup.com", favorite:false },
   { category:"기타", site:"홈택스", id:"-", password:"••••••••", memo:"HomeTax | 인증서: oooo", url:"https://www.hometax.go.kr", favorite:false },
   { category:"기타", site:"비씨카드", id:"-", password:"••••••••", memo:"BC카드", url:"https://www.bccard.com", favorite:false },
-  { category:"기타", site:"농협카드", id:"school", password:"school1234", memo:"인증서: oooo", url:"https://card.nonghyup.com", favorite:true },
-  { category:"기타", site:"NeaT (급식조달)", id:"school", password:"school1234", memo:"공공급식전자조달시스템 | 인증서: oooo", url:"https://neat.at.or.kr", favorite:true },
+  { category:"기타", site:"농협카드", id:"school", password:"12345678", memo:"인증서: oooo", url:"https://card.nonghyup.com", favorite:true },
+  { category:"기타", site:"NeaT (급식조달)", id:"school", password:"12345678", memo:"공공급식전자조달시스템 | 인증서: oooo", url:"https://neat.at.or.kr", favorite:true },
   { category:"기타", site:"금융결제원", id:"-", password:"••••••••", memo:"CMS | 이용기관 로그인", url:"https://www.cmsedi.or.kr/cms/auth/signin", favorite:false },
   { category:"기타", site:"온비드", id:"-", password:"••••••••", memo:"인증서: oooo", url:"https://www.onbid.co.kr/op/meminf/lgnmng/prtllgn/PrtlLgnController/main.do", favorite:false },
   { category:"기타", site:"공공구매정보망", id:"-", password:"••••••••", memo:"SMPP, 공공구매종합정보망 | 직접생산 확인, 중소기업 확인", url:"https://www.smpp.go.kr", favorite:false },
