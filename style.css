@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.0 — 통합 정리본
+   우리학교 키박스 v3.1.9 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -28,7 +28,7 @@
 
 *{box-sizing:border-box}
 html{
-  scroll-behavior:smooth;
+  scroll-behavior:auto;
   scroll-padding-top:92px;
 }
 #searchSection,#quickCopy,#siteSection,#schoolInfo,#bankInfo,#cardInfo{
@@ -5129,4 +5129,11 @@ td{
   .info-card.delete-mode .info-copy-cell{
     grid-column:2 / -1!important;
   }
+}
+
+
+/* v3.1.9: 상단 바로가기 이동감 완화 */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto!important;}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }

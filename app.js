@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.0 — 통합 정리본
+// 우리학교 키박스 v3.1.9 — 통합 정리본
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -7,92 +7,558 @@ const STORAGE_KEY = "hakdolSchoolKeyboxV30";
 
 const DEFAULT_INFO = {
   "school": [
-    ["학교 메일", "school@sen.go.kr"],
-    ["사업자등록번호", "123-45-67890"],
-    ["학교 기관코드", "12312123"],
-    ["나이스 조직코드", "B100000000"],
-    ["특수목적 인증서(메일)", "••••••••"],
-    ["전자관인 인증서", "••••••••"],
-    ["학교장터 인증서", "••••••••"],
-    ["가통서비스 ID", "school"],
-    ["가통서비스 PW", "••••••••"],
-    ["학교공유폴더 ID", "school"],
-    ["학교공유폴더 PW", "••••••••"],
-    ["와이파이 PW", "••••••••"],
-    ["쿨메신저 PW", "••••••••"]
+    [
+      "학교 메일",
+      "school@sen.go.kr"
+    ],
+    [
+      "사업자등록번호",
+      "120-00-00000"
+    ],
+    [
+      "학교 기관코드",
+      "1234567"
+    ],
+    [
+      "나이스 조직코드",
+      "B100000000"
+    ],
+    [
+      "특수목적 인증서(메일)",
+      "••••••••"
+    ],
+    [
+      "전자관인 인증서",
+      "••••••••"
+    ],
+    [
+      "학교장터 인증서",
+      "••••••••"
+    ],
+    [
+      "e알리미 ID",
+      "hakdol"
+    ],
+    [
+      "e알리미 PW",
+      "••••••••"
+    ],
+    [
+      "학교공유폴더 ID",
+      "hakdol"
+    ],
+    [
+      "학교공유폴더 PW",
+      "••••••••"
+    ],
+    [
+      "와이파이 PW",
+      "••••••••"
+    ],
+    [
+      "쿨메신저 PW",
+      "••••••••"
+    ]
   ],
   "bank": [
-    ["학교회계계좌", "000-00-00000"],
-    ["카드계좌", "000-00-00000"],
-    ["세외계좌", "000-00-00000"],
-    ["계좌PW", "••••"],
-    ["은행인증서(실장)", "••••••••"],
-    ["ㄴ자금이체 PW", "••••••"],
-    ["은행인증서(지출)", "••••••••"],
-    ["ㄴ자금이체 PW", "••••••"],
-    ["은행인증서(세입)", "••••••••"],
-    ["ㄴ자금이체 PW", "••••••"],
-    ["은행인증서(급여)", "••••••••"],
-    ["ㄴ자금이체 PW", "••••••••"]
+    [
+      "학교회계계좌",
+      "••••••••"
+    ],
+    [
+      "카드계좌",
+      "••••••••"
+    ],
+    [
+      "세외계좌",
+      "••••••••"
+    ],
+    [
+      "계좌PW",
+      "••••"
+    ],
+    [
+      "은행인증서(실장)",
+      "••••••••"
+    ],
+    [
+      "ㄴ자금이체 PW",
+      "••••••••"
+    ],
+    [
+      "은행인증서(지출)",
+      "••••••••"
+    ],
+    [
+      "ㄴ자금이체 PW",
+      "••••••••"
+    ],
+    [
+      "은행인증서(세입)",
+      "••••••••"
+    ],
+    [
+      "ㄴ자금이체 PW",
+      "••••••••"
+    ],
+    [
+      "은행인증서(급여)",
+      "••••••••"
+    ],
+    [
+      "ㄴ자금이체 PW",
+      "••••••••"
+    ]
   ],
   "card": [
-    ["BC카드 결제 PW", "••••"],
-    ["카드결제 인증서", "••••"],
-    ["기관카드 1", "••••-••••-••••-••••"],
-    ["기관카드 2", "••••-••••-••••-••••"],
-    ["기관카드 3", "••••-••••-••••-••••"],
-    ["기관카드 4", "••••-••••-••••-••••"],
-    ["기관카드 5", "••••-••••-••••-••••"],
-    ["기관카드 6", "••••-••••-••••-••••"],
-    ["기관카드 7", "••••-••••-••••-••••"],
-    ["기관카드 8", "••••-••••-••••-••••"],
-    ["기관카드 9", "••••-••••-••••-••••"],
-    ["기관카드 10", "••••-••••-••••-••••"]
+    [
+      "BC카드 결제 PW",
+      "••••"
+    ],
+    [
+      "카드결제 인증서",
+      "••••••••"
+    ],
+    [
+      "기관카드 온라인(비싼물건)",
+      "••••••••"
+    ],
+    [
+      "기관카드 1",
+      "1234-0000-1234-0000"
+    ],
+    [
+      "기관카드 2",
+      "1234-0000-1234-0001"
+    ],
+    [
+      "기관카드 3",
+      "1234-0000-1234-0002"
+    ],
+    [
+      "기관카드 4",
+      "1234-0000-1234-0003"
+    ],
+    [
+      "기관카드 5",
+      "1234-0000-1234-0004"
+    ],
+    [
+      "기관카드 6",
+      "1234-0000-1234-0005"
+    ],
+    [
+      "기관카드 7",
+      "1234-0000-1234-0006"
+    ],
+    [
+      "기관카드 8",
+      "1234-0000-1234-0007"
+    ],
+    [
+      "기관카드 9",
+      "1234-0000-1234-0008"
+    ]
   ]
 };
 
 const DEFAULT_ACCOUNTS = [
-  { category:"기타", site:"나라장터", id:"개인인증서", password:"개인인증서 비번", memo:"G2B | 조달청", url:"https://www.g2b.go.kr", favorite:false },
-  { category:"기타", site:"학교장터", id:"school", password:"12345678", memo:"S2B | 인증서: oooo", url:"https://www.s2b.kr", favorite:false },
-  { category:"기타", site:"지마켓", id:"school", password:"12345678", memo:"G마켓 | 새벽배송 불가", url:"https://www.gmarket.co.kr", favorite:true },
-  { category:"기타", site:"11번가", id:"school", password:"12345678", memo:"", url:"https://www.11st.co.kr", favorite:true },
-  { category:"기타", site:"알라딘", id:"-", password:"••••••••", memo:"", url:"https://www.aladin.co.kr", favorite:false },
-  { category:"기타", site:"예스24", id:"-", password:"••••••••", memo:"YES24", url:"https://www.yes24.com", favorite:false },
-  { category:"기타", site:"SSG닷컴", id:"-", password:"••••••••", memo:"SSG.com, 에스에스지닷컴 | 새벽배송 불가(자동취소됨)", url:"https://www.ssg.com", favorite:false },
-  { category:"기타", site:"다이소몰", id:"-", password:"••••••••", memo:"BIZ 로그인", url:"https://www.daisomall.co.kr", favorite:false },
-  { category:"기타", site:"롯데마트", id:"-", password:"••••••••", memo:"ZETTA(제타플렉스)", url:"https://www.lotteon.com", favorite:false },
-  { category:"기타", site:"에이블마켓", id:"-", password:"••••••••", memo:"able market, 서울시립 장애인생산품판매시설, 중증장애인생산품", url:"https://www.ablemarket.or.kr", favorite:false },
-  { category:"기타", site:"꿈드래쇼핑몰", id:"-", password:"••••••••", memo:"중증장애인생산품", url:"https://www.goods.go.kr", favorite:false },
-  { category:"기타", site:"티처빌", id:"-", password:"••••••••", memo:"티처몰, 체더스", url:"https://www.teacherville.co.kr", favorite:false },
-  { category:"기타", site:"오피스안", id:"-", password:"••••••••", memo:"과학실 물품", url:"https://www.officeahn.co.kr/", favorite:false },
-  { category:"기타", site:"스마일몰", id:"-", password:"••••••••", memo:"스마일보건 | 보건실 물품", url:"https://www.smilebogun.org", favorite:false },
-  { category:"기타", site:"HK마트", id:"-", password:"••••••••", memo:"에이치케이마트 | 급식실 물품", url:"https://www.hkmart.co.kr", favorite:false },
-  { category:"기타", site:"농협뱅킹", id:"-", password:"••••••••", memo:"NH뱅킹", url:"https://banking.nonghyup.com", favorite:false },
-  { category:"기타", site:"홈택스", id:"-", password:"••••••••", memo:"HomeTax | 인증서: oooo", url:"https://www.hometax.go.kr", favorite:false },
-  { category:"기타", site:"비씨카드", id:"-", password:"••••••••", memo:"BC카드", url:"https://www.bccard.com", favorite:false },
-  { category:"기타", site:"농협카드", id:"school", password:"12345678", memo:"인증서: oooo", url:"https://card.nonghyup.com", favorite:true },
-  { category:"기타", site:"NeaT (급식조달)", id:"school", password:"12345678", memo:"공공급식전자조달시스템 | 인증서: oooo", url:"https://neat.at.or.kr", favorite:true },
-  { category:"기타", site:"금융결제원", id:"-", password:"••••••••", memo:"CMS | 이용기관 로그인", url:"https://www.cmsedi.or.kr/cms/auth/signin", favorite:false },
-  { category:"기타", site:"온비드", id:"-", password:"••••••••", memo:"인증서: oooo", url:"https://www.onbid.co.kr/op/meminf/lgnmng/prtllgn/PrtlLgnController/main.do", favorite:false },
-  { category:"기타", site:"공공구매정보망", id:"-", password:"••••••••", memo:"SMPP, 공공구매종합정보망 | 직접생산 확인, 중소기업 확인", url:"https://www.smpp.go.kr", favorite:false },
-  { category:"기타", site:"올바로시스템", id:"-", password:"••••••••", memo:"폐기물 처리", url:"https://www.allbaro.or.kr/index.jsp", favorite:false },
-  { category:"기타", site:"한전", id:"-", password:"••••••••", memo:"한전ON, 파워플래너 | 전기요금·전력사용현황 조회 / 고객번호: ", url:"", favorite:false },
-  { category:"기타", site:"도시가스", id:"-", password:"••••••••", memo:"", url:"", favorite:false },
-  { category:"기타", site:"상하수도", id:"-", password:"••••••••", memo:"관할수도사업소", url:"", favorite:false },
-  { category:"기타", site:"승강기정보센터", id:"-", password:"••••••••", memo:"승강기점검 확인", url:"https://www.elevator.go.kr/opn/MainPage.do", favorite:false },
-  { category:"기타", site:"전기안전 여기로", id:"-", password:"••••••••", memo:"한국전기안전공사(KESCO) / 전기안전점검 검사 등", url:"https://safety.kesco.or.kr/cyber/index.do", favorite:false },
-  { category:"기타", site:"교육시설통합", id:"-", password:"개인인증서 사용", memo:"KEIIS, 교육시설통합정보망", url:"https://work.keiis.kr", favorite:false },
-  { category:"기타", site:"시설물통합", id:"-", password:"••••••••", memo:"FMS, 시설물통합정보시스템", url:"https://www.fms.or.kr", favorite:false },
-  { category:"기타", site:"교육시설공제", id:"-", password:"••••••••", memo:"KOEIS | 매년 11월 정기 가입(한국교육시설안전원)", url:"https://edu.koies.or.kr", favorite:false },
-  { category:"기타", site:"학교안전공제회", id:"-", password:"••••••••", memo:"사고 접수, 학교안전사고보상지원시스템", url:"https://www.schoolsafe.or.kr/school/login.do", favorite:false },
-  { category:"기타", site:"학교재난상황관리", id:"-", password:"••••••••", memo:"", url:"https://disaster.schoolsafe.kr/login", favorite:false },
-  { category:"기타", site:"중증장애인생산품우선구매관리시스템", id:"-", password:"••••••••", memo:"의무구매 실적 집계용(부서 성과평가), 매년 1회 확인 처리", url:"", favorite:false },
-  { category:"기타", site:"인증신제품", id:"-", password:"••••••••", memo:"NEP | 구매 계획 제출, 매년 1월경 공문 처리 | 설치 프로그램", url:"https://www.nepmark.or.kr", favorite:false },
-  { category:"기타", site:"에코스퀘어", id:"-", password:"••••••••", memo:"녹색구매", url:"https://ecosq.or.kr/", favorite:false },
-  { category:"기타", site:"[서울] 입학준비금", id:"-", password:"••••••••", memo:"진학어플라이", url:"https://sen.jinhakapply.com/PublicAdmin/Account/Login.aspx", favorite:false },
-  { category:"기타", site:"[서울] 목적사업비 정산시스템", id:"-", password:"••••••••", memo:"", url:"https://mokjeok.sen.go.kr", favorite:false },
-  { category:"기타", site:"[서울] 산업안전보건", id:"-", password:"••••••••", memo:"상,하반기 안전보건 의무이행 점검 및 관리감독자 평가 결과 제출", url:"https://sen.maot.co.kr/login", favorite:false },
-  { category:"기타", site:"[서울] 서울시학교안전공제회", id:"담당자 개인인증", password:"", memo:"여행자동행공제", url:"https://www.ssia.or.kr", favorite:false }
+  {
+    "category": "기타",
+    "site": "나라장터",
+    "id": "개인인증서",
+    "password": "개인인증서 비번",
+    "memo": "G2B, 조달청",
+    "url": "https://www.g2b.go.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "학교장터",
+    "id": "school",
+    "password": "12345678",
+    "memo": "S2B, 인증서: oooo",
+    "url": "https://www.s2b.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "지마켓",
+    "id": "school",
+    "password": "12345678",
+    "memo": "G마켓, 새벽배송 불가",
+    "url": "https://www.gmarket.co.kr",
+    "favorite": true
+  },
+  {
+    "category": "기타",
+    "site": "11번가",
+    "id": "school",
+    "password": "12345678",
+    "memo": "",
+    "url": "https://www.11st.co.kr",
+    "favorite": true
+  },
+  {
+    "category": "기타",
+    "site": "알라딘",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "",
+    "url": "https://www.aladin.co.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "예스24",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "YES24",
+    "url": "https://www.yes24.com",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "SSG닷컴",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "SSG.com, 에스에스지닷컴, 새벽배송 불가(자동취소됨)",
+    "url": "https://www.ssg.com",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "다이소몰",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "BIZ 로그인",
+    "url": "https://www.daisomall.co.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "롯데마트",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "ZETTA(제타플렉스)",
+    "url": "https://www.lotteon.com",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "에이블마켓",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "able market, 서울시립 장애인생산품판매시설, 중증장애인생산품",
+    "url": "https://www.ablemarket.or.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "꿈드래쇼핑몰",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "중증장애인생산품",
+    "url": "https://www.goods.go.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "티처빌",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "티처몰, 체더스",
+    "url": "https://www.teacherville.co.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "오피스안",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "과학실 물품",
+    "url": "https://www.officeahn.co.kr/",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "스마일몰",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "스마일보건, 보건실 물품",
+    "url": "https://www.smilebogun.org",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "HK마트",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "에이치케이마트, 급식실 물품",
+    "url": "https://www.hkmart.co.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "농협뱅킹",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "NH뱅킹",
+    "url": "https://banking.nonghyup.com",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "홈택스",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "HomeTax, 인증서: oooo",
+    "url": "https://www.hometax.go.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "국민연금",
+    "id": "인증서",
+    "password": "••••••••",
+    "memo": "4대보험",
+    "url": "https://edi.nps.or.kr/",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "건강보험",
+    "id": "인증서",
+    "password": "••••••••",
+    "memo": "4대보험",
+    "url": "https://www.nhis.or.kr/nhis/index.do",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "고용산재보험",
+    "id": "인증서",
+    "password": "••••••••",
+    "memo": "4대보험",
+    "url": "https://total.comwel.or.kr/",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "비씨카드",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "BC카드",
+    "url": "https://www.bccard.com",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "농협카드",
+    "id": "school",
+    "password": "12345678",
+    "memo": "인증서: oooo",
+    "url": "https://card.nonghyup.com",
+    "favorite": true
+  },
+  {
+    "category": "기타",
+    "site": "NeaT (급식조달)",
+    "id": "school",
+    "password": "12345678",
+    "memo": "공공급식전자조달시스템, 인증서: oooo",
+    "url": "https://neat.at.or.kr",
+    "favorite": true
+  },
+  {
+    "category": "기타",
+    "site": "금융결제원",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "CMS, 이용기관 로그인",
+    "url": "https://www.cmsedi.or.kr/cms/auth/signin",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "온비드",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "인증서: oooo",
+    "url": "https://www.onbid.co.kr/op/meminf/lgnmng/prtllgn/PrtlLgnController/main.do",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "공공구매정보망",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "SMPP, 공공구매종합정보망, 직접생산 확인, 중소기업 확인",
+    "url": "https://www.smpp.go.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "올바로시스템",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "폐기물 처리",
+    "url": "https://www.allbaro.or.kr/index.jsp",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "한전",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "한전ON, 파워플래너, 전기요금·전력사용현황 조회, 고객번호:",
+    "url": "",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "도시가스",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "",
+    "url": "",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "상하수도",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "관할수도사업소",
+    "url": "",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "승강기정보센터",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "승강기점검 확인",
+    "url": "https://www.elevator.go.kr/opn/MainPage.do",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "전기안전 여기로",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "한국전기안전공사(KESCO), 전기안전점검 검사 등",
+    "url": "https://safety.kesco.or.kr/cyber/index.do",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "교육시설통합",
+    "id": "-",
+    "password": "개인인증서 사용",
+    "memo": "KEIIS, 교육시설통합정보망",
+    "url": "https://work.keiis.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "시설물통합",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "FMS, 시설물통합정보시스템",
+    "url": "https://www.fms.or.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "교육시설공제",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "KOEIS, 매년 11월 정기 가입(한국교육시설안전원)",
+    "url": "https://edu.koies.or.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "학교안전공제회",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "사고 접수, 학교안전사고보상지원시스템",
+    "url": "https://www.schoolsafe.or.kr/school/login.do",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "학교재난상황관리",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "",
+    "url": "https://disaster.schoolsafe.kr/login",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "중증장애인생산품우선구매관리시스템",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "의무구매 실적 집계용(부서 성과평가), 매년 1회 확인 처리",
+    "url": "",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "인증신제품",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "NEP, 구매 계획 제출, 매년 1월경 공문 처리, 설치 프로그램",
+    "url": "https://www.nepmark.or.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "에코스퀘어",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "녹색구매",
+    "url": "https://ecosq.or.kr/",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "[서울] 입학준비금",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "진학어플라이",
+    "url": "https://sen.jinhakapply.com/PublicAdmin/Account/Login.aspx",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "[서울] 목적사업비 정산시스템",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "",
+    "url": "https://mokjeok.sen.go.kr",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "[서울] 산업안전보건",
+    "id": "school",
+    "password": "••••••••",
+    "memo": "상,하반기 안전보건 의무이행 점검 및 관리감독자 평가 결과 제출",
+    "url": "https://sen.maot.co.kr/login",
+    "favorite": false
+  },
+  {
+    "category": "기타",
+    "site": "[서울] 서울시학교안전공제회",
+    "id": "담당자 개인인증",
+    "password": "",
+    "memo": "여행자동행공제",
+    "url": "https://www.ssia.or.kr",
+    "favorite": false
+  }
 ];
 
 // ============================================================
@@ -643,7 +1109,7 @@ async function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const infoRows = [["구분", "항목", "값"]];
   for (const [key, label] of [["school","학교 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
-    state.info[key].forEach(([name, value]) => infoRows.push([label, name, value]));
+    DEFAULT_INFO[key].forEach(([name, value]) => infoRows.push([label, name, value]));
   }
   const inputRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
   DEFAULT_ACCOUNTS.forEach(a => inputRows.push([a.site, a.id, a.password, a.memo, a.url || "", a.favorite ? "Y" : ""]));
@@ -654,7 +1120,7 @@ async function downloadTemplate() {
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
   XLSX.utils.book_append_sheet(wb, accWs, "계정입력");
   XLSX.writeFile(wb, "학교키박스_기본입력파일.xlsx");
-  showToast("URL 칸이 포함된 기본엑셀 입력파일을 다운로드했어요.");
+  showToast("개인 정보가 빠진 기본 입력파일을 다운로드했어요.");
 }
 
 function parseUploadedWorkbook(wb) {
@@ -1215,7 +1681,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.8",
+    version: "v3.1.9",
     exportedAt: new Date().toISOString(),
     data: state
   };
@@ -1266,6 +1732,49 @@ window.dragStart = dragStart;
 window.dragOver = dragOver;
 window.dropRow = dropRow;
 
+
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+function calmScrollTo(targetTop, duration = 760) {
+  const maxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const finalTop = Math.max(0, Math.min(targetTop, maxTop));
+  if (prefersReducedMotion()) {
+    window.scrollTo(0, finalTop);
+    return Promise.resolve();
+  }
+  const startTop = window.scrollY || document.documentElement.scrollTop || 0;
+  const distance = finalTop - startTop;
+  if (Math.abs(distance) < 2) return Promise.resolve();
+  const startTime = performance.now();
+  return new Promise(resolve => {
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = easeInOutCubic(progress);
+      window.scrollTo(0, startTop + distance * eased);
+      if (progress < 1) requestAnimationFrame(step);
+      else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+function calmScrollToElement(element, options = {}) {
+  if (!element) return Promise.resolve();
+  const navHeight = document.querySelector(".top-nav")?.offsetHeight || 76;
+  const gap = 14;
+  const rect = element.getBoundingClientRect();
+  const currentTop = window.scrollY || document.documentElement.scrollTop || 0;
+  let targetTop = currentTop + rect.top - navHeight - gap;
+  if (options.block === "center") {
+    targetTop = currentTop + rect.top - Math.max(0, (window.innerHeight - rect.height) / 2);
+  }
+  return calmScrollTo(targetTop, options.duration || 780);
+}
+
 // ============================================================
 // 초기 로드 / 스크롤 / 이벤트 바인딩
 // ============================================================
@@ -1280,7 +1789,7 @@ if (scrollTopBtn) {
     scrollTopBtn.classList.toggle("show", window.scrollY > 500);
   });
   scrollTopBtn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    calmScrollTo(0, 780);
   });
 }
 
@@ -1311,6 +1820,19 @@ if (accountSearchEl) accountSearchEl.oninput = e => {
 
 
 
+
+document.querySelectorAll('.top-brand[href^="#"], .top-menu a[href^="#"]:not([data-nav="search"])').forEach(link => {
+  link.addEventListener("click", event => {
+    const hash = link.getAttribute("href");
+    if (!hash || hash === "#") return;
+    const target = document.querySelector(hash);
+    if (!target) return;
+    event.preventDefault();
+    calmScrollToElement(target, { duration: 780 });
+    try { history.replaceState(null, "", hash); } catch (error) {}
+  });
+});
+
 // 상단 네비게이션 검색 버튼: 검색창으로 이동 후 바로 입력 가능하도록 포커스
 const searchNavButton = document.querySelector('[data-nav="search"]');
 const searchSection = document.getElementById("searchSection");
@@ -1331,12 +1853,9 @@ if (searchNavButton && searchSection && searchInput) {
   searchNavButton.addEventListener("click", event => {
     event.preventDefault();
 
-    searchSection.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
+    calmScrollToElement(searchSection, { block: "center", duration: 780 }).then(() => {
+      setTimeout(focusSearchInput, 80);
     });
-
-    setTimeout(focusSearchInput, 350);
   });
 }
 
