@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.1.10 — 통합 정리본
+// 우리학교 키박스 v3.1.11 — 통합 정리본
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -1019,7 +1019,7 @@ function addInfoRow(key) {
   if (!state.info[key]) state.info[key] = [];
   state.info[key].push(["새 항목", ""]);
   render();
-  showToast("행을 추가했어요. 입력 후 이 PC에 저장을 눌러주세요.");
+  showToast("행을 추가했어요. 입력 후 브라우저에 저장을 눌러주세요.");
 }
 
 function toggleInfoDelete(key) {
@@ -1040,7 +1040,7 @@ function toggleInfoDelete(key) {
   state.info[key] = state.info[key].filter((_, idx) => !selected.includes(idx));
   deleteMode.info[key] = false;
   render();
-  showToast("선택한 행을 삭제했어요. 보관하려면 이 PC에 저장을 눌러주세요.");
+  showToast("선택한 행을 삭제했어요. 보관하려면 브라우저에 저장을 눌러주세요.");
 }
 
 // 사이트 계정 삭제 모드: 카테고리 구분 없이 전체("__all__")에 대해 동작
@@ -1064,14 +1064,14 @@ function toggleAccountDelete() {
   state.accounts = state.accounts.filter((_, idx) => !selected.includes(idx));
   deleteMode.account[category] = false;
   render();
-  showToast("선택한 행을 삭제했어요. 보관하려면 이 PC에 저장을 눌러주세요.");
+  showToast("선택한 행을 삭제했어요. 보관하려면 브라우저에 저장을 눌러주세요.");
 }
 
 function addRowToCategory(category) {
   syncInputs();
   state.accounts.push({ category: category || "기타", site:"", id:"", password:"", memo:"", url:"", favorite:false });
   render();
-  showToast("행을 추가했어요. 입력 후 이 PC에 저장을 눌러주세요.");
+  showToast("행을 추가했어요. 입력 후 브라우저에 저장을 눌러주세요.");
 }
 function addRow() {
   addRowToCategory("기타");
@@ -1099,7 +1099,7 @@ function dropRow(event, targetIndex) {
   const [moved] = state.accounts.splice(from, 1);
   state.accounts.splice(from < to ? to - 1 : to, 0, moved);
   render();
-  showToast("순서를 바꿨어요. 보관하려면 이 PC에 저장을 눌러주세요.");
+  showToast("순서를 바꿨어요. 보관하려면 브라우저에 저장을 눌러주세요.");
 }
 
 // ============================================================
@@ -1413,7 +1413,7 @@ function applyUploadPlan(plan, mode) {
     state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
     deleteMode = { info: {}, account: {} };
     render();
-    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요. 보관하려면 이 PC에 저장을 눌러주세요.`);
+    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요. 보관하려면 브라우저에 저장을 눌러주세요.`);
     return;
   }
 
@@ -1456,7 +1456,7 @@ function applyUploadPlan(plan, mode) {
     : mode === "merge"
       ? `새 항목 ${plan.counts.new}개 추가, 내용 바뀐 항목 ${plan.counts.changed}개를 반영했어요.`
       : `업로드 항목 ${planItemList(plan).length}개를 새 항목으로 추가했어요.`;
-  showToast(`${message} 보관하려면 이 PC에 저장을 눌러주세요.`);
+  showToast(`${message} 보관하려면 브라우저에 저장을 눌러주세요.`);
 }
 function closeUploadModal() {
   const modal = document.getElementById("excelUploadModal");
@@ -1641,7 +1641,7 @@ function saveLocal() {
       throw new Error("데이터가 너무 커 저장할 수 없어요. 일부 항목을 줄여주세요.");
     }
     localStorage.setItem(STORAGE_KEY, serialized);
-    showToast("이 PC 브라우저에 저장했어요.");
+    showToast("브라우저에 저장했어요.");
   } catch (err) {
     showToast(err.message || "저장하지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
   }
@@ -1668,20 +1668,20 @@ function loadLocal(options = {}) {
   }
 }
 function resetAll() {
-  if (!confirm("이 PC에 저장된 모든 정보를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.")) return;
+  if (!confirm("브라우저에 저장된 모든 정보를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.")) return;
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {}
   state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
   deleteMode = { info: {}, account: {} };
   render();
-  showToast("이 PC 저장내용을 초기화했어요.");
+  showToast("브라우저 저장내용을 초기화했어요.");
 }
 function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.10",
+    version: "v3.1.11",
     exportedAt: new Date().toISOString(),
     data: state
   };
@@ -1699,7 +1699,7 @@ async function loadJsonFile(file) {
     state = { info: data.info, accounts: normalizeAccountDefaults(data.accounts) };
     deleteMode = { info: {}, account: {} };
     render();
-    showToast("JSON 백업을 불러왔어요. 보관하려면 이 PC에 저장을 눌러주세요.");
+    showToast("JSON 백업을 불러왔어요. 보관하려면 브라우저에 저장을 눌러주세요.");
   } catch (err) {
     showToast("JSON 파일을 불러오지 못했어요.");
   }

@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.10 — 통합 정리본
+   우리학교 키박스 v3.1.11 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -5138,7 +5138,7 @@ td{
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 
-/* v3.1.10: 파일명/섹션 이동 UX 마감 보정 */
+/* v3.1.11: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
 .section-arrived{
   animation:keyboxSectionArrive 1.12s ease-out 1;
 }
