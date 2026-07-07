@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.9 — 통합 정리본
+   우리학교 키박스 v3.1.10 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -5132,8 +5132,61 @@ td{
 }
 
 
-/* v3.1.9: 상단 바로가기 이동감 완화 */
+/* v3.1.9: 상단 바로가기 이동감 완화(유지) */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto!important;}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
+
+/* v3.1.10: 파일명/섹션 이동 UX 마감 보정 */
+.section-arrived{
+  animation:keyboxSectionArrive 1.12s ease-out 1;
+}
+@keyframes keyboxSectionArrive{
+  0%{
+    outline:3px solid rgba(37,99,235,.34);
+    box-shadow:0 0 0 8px rgba(37,99,235,.10), var(--shadow);
+  }
+  100%{
+    outline:3px solid rgba(37,99,235,0);
+    box-shadow:var(--shadow);
+  }
+}
+.search-panel.section-arrived{
+  animation:keyboxSearchArrive 1.12s ease-out 1;
+}
+@keyframes keyboxSearchArrive{
+  0%{
+    outline:3px solid rgba(37,99,235,.30);
+    box-shadow:0 0 0 8px rgba(37,99,235,.10), 0 14px 30px rgba(15,23,42,.06);
+  }
+  100%{
+    outline:3px solid rgba(37,99,235,0);
+    box-shadow:0 14px 30px rgba(15,23,42,.06);
+  }
+}
+.quick-empty-state{
+  display:grid;
+  gap:6px;
+  align-items:center;
+  justify-items:center;
+  padding:20px 16px!important;
+  color:#64748B!important;
+  background:#F8FAFC!important;
+  border-color:#D8E4F0!important;
+}
+.quick-empty-state strong{
+  color:#334155;
+  font-size:14px;
+  font-weight:850;
+}
+.quick-empty-state span{
+  color:#64748B;
+  font-size:13px;
+  font-weight:650;
+}
+@media (prefers-reduced-motion: reduce){
+  .section-arrived,
+  .search-panel.section-arrived{animation:none!important;}
+}
+

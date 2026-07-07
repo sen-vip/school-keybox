@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.1.9 — 통합 정리본
+// 우리학교 키박스 v3.1.10 — 통합 정리본
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -849,7 +849,7 @@ function renderQuickAccounts() {
     : `${allQuick.length}개 항목`;
 
   if (allQuick.length === 0) {
-    el.innerHTML = `<div class="empty-mini">빠른복사로 보여줄 공용계정이 아직 없어요.</div>`;
+    el.innerHTML = `<div class="empty-mini quick-empty-state"><strong>즐겨찾기한 항목이 여기에 표시돼요.</strong><span>자주 쓰는 사이트 계정의 ☆를 눌러 빠른복사에 추가하세요.</span></div>`;
     return;
   }
   if (accountSearchTerm && quick.length === 0) {
@@ -1624,8 +1624,8 @@ function exportBasicExcel() {
   accWs["!cols"] = [{wch:34},{wch:24},{wch:24},{wch:42},{wch:46},{wch:10}];
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
   XLSX.utils.book_append_sheet(wb, accWs, "계정입력");
-  XLSX.writeFile(wb, `${getSchoolEmailPrefix()}_${getTimestampForFilename()}.xlsx`);
-  showToast("현재 내용을 기본 입력파일 형식으로 다운로드했어요.");
+  XLSX.writeFile(wb, `${getSchoolEmailPrefix()}_KEYBOX_${getTimestampForFilename()}.xlsx`);
+  showToast("현재 내용을 KEYBOX 엑셀 파일로 다운로드했어요.");
 }
 
 // ============================================================
@@ -1681,7 +1681,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.9",
+    version: "v3.1.10",
     exportedAt: new Date().toISOString(),
     data: state
   };
@@ -1772,7 +1772,15 @@ function calmScrollToElement(element, options = {}) {
   if (options.block === "center") {
     targetTop = currentTop + rect.top - Math.max(0, (window.innerHeight - rect.height) / 2);
   }
-  return calmScrollTo(targetTop, options.duration || 780);
+  return calmScrollTo(targetTop, options.duration || 980);
+}
+function markSectionArrived(element) {
+  if (!element || prefersReducedMotion()) return;
+  document.querySelectorAll(".section-arrived").forEach(el => el.classList.remove("section-arrived"));
+  element.classList.remove("section-arrived");
+  void element.offsetWidth;
+  element.classList.add("section-arrived");
+  window.setTimeout(() => element.classList.remove("section-arrived"), 1150);
 }
 
 // ============================================================
@@ -1789,7 +1797,7 @@ if (scrollTopBtn) {
     scrollTopBtn.classList.toggle("show", window.scrollY > 500);
   });
   scrollTopBtn.addEventListener("click", () => {
-    calmScrollTo(0, 780);
+    calmScrollTo(0, 980);
   });
 }
 
@@ -1828,7 +1836,7 @@ document.querySelectorAll('.top-brand[href^="#"], .top-menu a[href^="#"]:not([da
     const target = document.querySelector(hash);
     if (!target) return;
     event.preventDefault();
-    calmScrollToElement(target, { duration: 780 });
+    calmScrollToElement(target, { duration: 980 }).then(() => markSectionArrived(target));
     try { history.replaceState(null, "", hash); } catch (error) {}
   });
 });
@@ -1853,8 +1861,9 @@ if (searchNavButton && searchSection && searchInput) {
   searchNavButton.addEventListener("click", event => {
     event.preventDefault();
 
-    calmScrollToElement(searchSection, { block: "center", duration: 780 }).then(() => {
-      setTimeout(focusSearchInput, 80);
+    calmScrollToElement(searchSection, { block: "center", duration: 980 }).then(() => {
+      markSectionArrived(searchSection);
+      setTimeout(focusSearchInput, 120);
     });
   });
 }
