@@ -336,7 +336,7 @@ function renderInfoCards() {
       : "";
 
     const gridBody = filteredRows.length > 0
-      ? (key === "school" ? renderSchoolGrid(filteredRows, deleting) : renderInfoRows(key, filteredRows, deleting))
+      ? renderInfoRows(key, filteredRows, deleting)
       : "";
 
     return `
@@ -1215,7 +1215,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.7",
+    version: "v3.1.8",
     exportedAt: new Date().toISOString(),
     data: state
   };

@@ -4904,3 +4904,229 @@ td{
     grid-column:2 / -1!important;
   }
 }
+
+
+/* ============================================================
+   v3.1.8 info row visual hierarchy refinement
+   - 학교정보/은행계좌/결제수단은 카드 낱개가 아닌 섹션 안 목록처럼 보이게 조정
+   - 라벨은 차분하게, 값은 더 또렷하게, 복사 버튼은 오른쪽 고정
+   - 학교정보는 한 줄 정보행 목록으로 넓게 보여 값 가독성 확보
+   ============================================================ */
+.info-layout{
+  gap:18px!important;
+}
+
+.info-card{
+  padding:22px 20px!important;
+  border:1px solid #DDE7F3!important;
+  border-radius:24px!important;
+  background:#FFFFFF!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
+}
+
+.info-school,
+.info-bank,
+.info-pay{
+  background:#FFFFFF!important;
+  border-color:#DDE7F3!important;
+}
+
+.info-card-head{
+  align-items:center!important;
+  margin-bottom:16px!important;
+}
+
+.info-card h2{
+  font-size:23px!important;
+  font-weight:850!important;
+  letter-spacing:-.7px!important;
+  color:#0F172A!important;
+}
+
+.info-sub{
+  font-size:12px!important;
+  font-weight:750!important;
+  color:#64748B!important;
+}
+
+.info-card .info-grid,
+.info-card .info-grid.school-grid{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:0!important;
+  border:1px solid #E1E9F2!important;
+  border-radius:18px!important;
+  background:#FFFFFF!important;
+  overflow:hidden!important;
+}
+
+.info-card .school-column,
+.info-card .school-extra{
+  display:contents!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+  margin:0!important;
+}
+
+.info-card .info-row,
+.info-card .info-row.selecting{
+  display:grid!important;
+  grid-template-columns:minmax(130px,26%) minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:14px!important;
+  min-height:52px!important;
+  padding:11px 10px 11px 16px!important;
+  border:0!important;
+  border-bottom:1px solid #E7EEF6!important;
+  border-radius:0!important;
+  background:#FFFFFF!important;
+  box-shadow:none!important;
+}
+
+.info-card .info-row:nth-child(even){
+  background:#FAFCFF!important;
+}
+
+.info-card .info-row:last-child{
+  border-bottom:0!important;
+}
+
+.info-card .info-row:hover{
+  background:#F8FAFC!important;
+  box-shadow:inset 3px 0 0 #BFDBFE!important;
+}
+
+.info-card .label-input{
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:#475569!important;
+  font-size:13px!important;
+  font-weight:720!important;
+  letter-spacing:-.25px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.info-card .inline-input{
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:#0F172A!important;
+  font-size:14px!important;
+  font-weight:850!important;
+  letter-spacing:-.2px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.info-card .label-input:hover,
+.info-card .label-input:focus,
+.info-card .inline-input:hover,
+.info-card .inline-input:focus{
+  background:#FFFFFF!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.10)!important;
+  border-radius:8px!important;
+}
+
+.info-card .copy-cell,
+.info-card .info-copy-cell{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 36px!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+
+.info-card .copy-pill.copy-icon-only{
+  width:36px!important;
+  height:36px!important;
+  border:1px solid #BFDBFE!important;
+  border-radius:12px!important;
+  background:#EFF6FF!important;
+  color:#2563EB!important;
+  display:grid!important;
+  place-items:center!important;
+}
+
+.info-card .copy-pill.copy-icon-only svg{
+  width:16px!important;
+  height:16px!important;
+}
+
+.info-card .copy-pill.copy-icon-only:hover{
+  background:#DBEAFE!important;
+  border-color:#93C5FD!important;
+}
+
+.info-card.delete-mode .info-row,
+.info-card.delete-mode .info-row.selecting{
+  grid-template-columns:28px minmax(130px,26%) minmax(0,1fr)!important;
+}
+
+@media (max-width:760px){
+  .info-card{
+    padding:18px 14px!important;
+    border-radius:20px!important;
+  }
+
+  .info-card-head{
+    align-items:flex-start!important;
+  }
+
+  .info-card h2{
+    font-size:21px!important;
+  }
+
+  .info-card .info-row,
+  .info-card .info-row.selecting{
+    grid-template-columns:1fr!important;
+    gap:4px!important;
+    min-height:62px!important;
+    padding:11px 10px 11px 14px!important;
+  }
+
+  .info-card .label-input{
+    grid-column:1 / -1!important;
+    color:#64748B!important;
+    font-size:12px!important;
+    font-weight:800!important;
+  }
+
+  .info-card .copy-cell,
+  .info-card .info-copy-cell{
+    grid-column:1 / -1!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 36px!important;
+    align-items:center!important;
+    gap:10px!important;
+  }
+
+  .info-card .inline-input{
+    font-size:14px!important;
+  }
+
+  .info-card.delete-mode .info-row,
+  .info-card.delete-mode .info-row.selecting{
+    grid-template-columns:28px 1fr!important;
+  }
+
+  .info-card.delete-mode .select-cell{
+    grid-column:1 / 2!important;
+    grid-row:1 / span 2!important;
+  }
+
+  .info-card.delete-mode .label-input,
+  .info-card.delete-mode .copy-cell,
+  .info-card.delete-mode .info-copy-cell{
+    grid-column:2 / -1!important;
+  }
+}
