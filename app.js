@@ -363,8 +363,8 @@ function renderInfoCards() {
 // ============================================================
 function quickSiteLabel(name) {
   const text = String(name || "").trim();
-  if (text.length <= 9) return text;
-  const cut = text.slice(0, 8).replace(/[\s(（]+$/g, "");
+  if (text.length <= 14) return text;
+  const cut = text.slice(0, 13).replace(/[\s(（]+$/g, "");
   return `${cut}...`;
 }
 
@@ -394,8 +394,7 @@ function renderQuickAccounts() {
     <article class="quick-item">
       <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="빠른복사에서 빼기" type="button">★</button>
 
-      <div class="site-label">
-        <span class="site-badge">${esc(badgeText(item.site))}</span>
+      <div class="site-label quick-site-label">
         <div><strong title="${esc(item.site)}">${esc(quickSiteLabel(item.site))}</strong></div>
       </div>
 
@@ -456,40 +455,42 @@ function renderAccounts() {
   updateClearBtnState();
 
   const deleting = !!deleteMode.account.__all__;
-  const showMove = !accountSearchTerm && !deleting;
+  const showMove = false; // v3.1.7: 순서 변경 핸들은 평소 화면에서 숨김
   const html = `
-    <div class="flat-table ${deleting ? 'delete-mode' : ''}">
-      <table>
-        <colgroup>
-          ${deleting ? '<col class="no-print" style="width:42px">' : ''}
-          <col class="no-print favorite-col" style="width:32px">
-          <col style="width:42%"><col style="width:29%"><col style="width:29%">
-          ${showMove ? '<col class="no-print" style="width:56px">' : ''}
-        </colgroup>
-        <thead><tr>${deleting ? '<th class="no-print"></th>' : ''}<th class="no-print"></th><th>사이트명</th><th>아이디</th><th>비밀번호</th>${showMove ? '<th class="no-print">이동</th>' : ''}</tr></thead>
-        <tbody>
-          ${filteredAccounts.map(item => `
-            <tr ${showMove ? `draggable="true" ondragstart="dragStart(event, ${item.idx})" ondragover="dragOver(event)" ondrop="dropRow(event, ${item.idx})"` : ''} data-idx="${item.idx}">
-              ${deleting ? `<td class="select-cell no-print"><input type="checkbox" data-account-select="${item.idx}" aria-label="삭제할 행 선택" /></td>` : ''}
-              <td class="no-print favorite-cell"><button class="star-btn ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="빠른복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button></td>
-              <td class="site">
-                <div class="site-label account-site-label">
-                  <span class="site-badge">${esc(badgeText(item.site))}</span>
-                  <div class="site-texts">
-                    <div class="site-main-line">
-                      <input class="table-input site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
-                      ${String(item.url || "").trim() ? `<button class="open-url-btn no-print" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">↗ 열기</button>` : ""}
-                    </div>
-                    <textarea class="table-input memo-sub" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
-                  </div>
+    <div class="account-list ${deleting ? 'delete-mode' : ''}" role="list">
+      ${filteredAccounts.map(item => `
+        <article class="account-row-card" role="listitem" ${showMove ? `draggable="true" ondragstart="dragStart(event, ${item.idx})" ondragover="dragOver(event)" ondrop="dropRow(event, ${item.idx})"` : ''} data-idx="${item.idx}">
+          <div class="account-row-head">
+            ${deleting ? `<label class="select-cell account-select no-print"><input type="checkbox" data-account-select="${item.idx}" aria-label="삭제할 행 선택" /></label>` : ''}
+            <button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="빠른복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>
+            <div class="site-label account-site-label">
+              <div class="site-texts">
+                <div class="site-main-line">
+                  <input class="table-input site-input account-site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
+                  ${String(item.url || "").trim() ? `<button class="open-url-btn no-print" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">↗ 열기</button>` : ""}
                 </div>
-              </td>
-              <td><div class="copy-cell account-copy-cell"><button class="copy-chip no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">ID</button><input class="table-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" /></div></td>
-              <td><div class="copy-cell account-copy-cell"><button class="copy-chip no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">PW</button><input class="table-input" title="${esc(displayPw(item.password))}" type="${pwMode === 'mask' ? 'password' : 'text'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" /></div></td>
-              ${showMove ? '<td class="no-print drag-cell"><button class="drag-handle" title="끌어서 순서 변경">☰</button></td>' : ''}
-            </tr>`).join("")}
-        </tbody>
-      </table>
+                <div class="account-meta-line">
+                  <textarea class="table-input memo-sub account-memo-input" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
+                </div>
+              </div>
+            </div>
+            ${showMove ? '<button class="drag-handle account-drag no-print" title="끌어서 순서 변경" type="button">☰</button>' : ''}
+          </div>
+
+          <div class="credential-stack">
+            <section class="credential-row">
+              <div class="credential-label">아이디</div>
+              <input class="table-input credential-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" />
+              <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">복사</button>
+            </section>
+
+            <section class="credential-row">
+              <div class="credential-label">비밀번호</div>
+              <input class="table-input credential-input" title="${esc(item.password)}" type="text" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
+              <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">복사</button>
+            </section>
+          </div>
+        </article>`).join("")}
     </div>`;
   document.getElementById("accountGroups").innerHTML = filteredAccounts.length ? html
     : accountSearchTerm
@@ -946,7 +947,7 @@ function applyUploadPlan(plan, mode) {
     state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
     deleteMode = { info: {}, account: {} };
     render();
-    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 삭제 ${plan.counts.removed}개 반영했어요. 보관하려면 이 PC에 저장을 눌러주세요.`);
+    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요. 보관하려면 이 PC에 저장을 눌러주세요.`);
     return;
   }
 
@@ -960,7 +961,7 @@ function applyUploadPlan(plan, mode) {
       }
       if (item.type === "new") {
         nextState.info[key].push([...item.uploaded]);
-      } else if (mode === "update" && item.type === "changed" && item.existingIndex >= 0) {
+      } else if (mode === "merge" && item.type === "changed" && item.existingIndex >= 0) {
         nextState.info[key][item.existingIndex] = [...item.uploaded];
       }
     });
@@ -975,7 +976,7 @@ function applyUploadPlan(plan, mode) {
     }
     if (item.type === "new") {
       nextState.accounts.push(uploaded);
-    } else if (mode === "update" && item.type === "changed" && item.existingIndex >= 0) {
+    } else if (mode === "merge" && item.type === "changed" && item.existingIndex >= 0) {
       const existingFavorite = nextState.accounts[item.existingIndex]?.favorite === true;
       nextState.accounts[item.existingIndex] = { ...nextState.accounts[item.existingIndex], ...uploaded, favorite: existingFavorite };
     }
@@ -985,9 +986,9 @@ function applyUploadPlan(plan, mode) {
   deleteMode = { info: {}, account: {} };
   render();
   const message = mode === "add-only"
-    ? `신규 항목 ${plan.counts.new}개만 추가했어요.`
-    : mode === "update"
-      ? `신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트했어요.`
+    ? `새 항목 ${plan.counts.new}개만 추가했어요.`
+    : mode === "merge"
+      ? `새 항목 ${plan.counts.new}개 추가, 내용 바뀐 항목 ${plan.counts.changed}개를 반영했어요.`
       : `업로드 항목 ${planItemList(plan).length}개를 새 항목으로 추가했어요.`;
   showToast(`${message} 보관하려면 이 PC에 저장을 눌러주세요.`);
 }
@@ -1028,9 +1029,12 @@ function showUploadReviewModal(plan) {
   const sectionRows = Object.entries(bySection).map(([label, c]) => `
     <div class="excel-modal-section-row">
       <strong>${esc(label)}</strong>
-      <span>신규 ${c.new} · 변경 ${c.changed} · 동일 ${c.same} · 삭제 ${c.removed}</span>
+      <span>새로 추가 ${c.new} · 내용 바뀜 ${c.changed} · 그대로 유지 ${c.same} · 엑셀에 없음 ${c.removed}</span>
     </div>
   `).join("");
+  const syncNotice = plan.counts.removed > 0
+    ? `<p class="excel-modal-sync-warning">주의: 엑셀에 없는 기존 항목 <b>${plan.counts.removed}개</b>는 동기화하면 키박스에서 빠져요.</p>`
+    : `<p class="excel-modal-sync-safe">엑셀처럼 맞추기는 새 항목·바뀐 내용·빠진 항목까지 엑셀 파일 기준으로 맞춰요.</p>`;
 
   const modal = document.createElement("div");
   modal.id = "excelUploadModal";
@@ -1039,23 +1043,28 @@ function showUploadReviewModal(plan) {
     <div class="excel-modal" role="dialog" aria-modal="true" aria-labelledby="excelUploadModalTitle">
       <button class="excel-modal-close" type="button" data-upload-action="cancel" aria-label="닫기">×</button>
       <div class="excel-modal-kicker">엑셀 업로드</div>
-      <h3 id="excelUploadModalTitle">엑셀 업로드 확인</h3>
-      <p class="excel-modal-desc">기존 키박스 데이터와 비교했어요. 같은 항목과 업로드 파일 내 중복 계정은 자동으로 추가하지 않고, 변경된 항목만 확인 후 반영할 수 있어요.</p>
+      <h3 id="excelUploadModalTitle">엑셀 파일과 비교했어요</h3>
+      <p class="excel-modal-desc">기존 키박스와 업로드한 엑셀을 비교한 결과예요. 엑셀을 최신 원본으로 관리한다면 <b>엑셀처럼 맞추기</b>를 쓰면 돼요.</p>
       <div class="excel-modal-summary" aria-label="업로드 비교 결과">
-        <div><strong>${plan.counts.new}</strong><span>신규 항목</span></div>
-        <div><strong>${plan.counts.changed}</strong><span>변경 가능</span></div>
-        <div><strong>${plan.counts.same}</strong><span>동일 항목</span></div>
-        <div><strong>${plan.counts.removed}</strong><span>삭제 예정</span></div>
-        <div><strong>${plan.counts.duplicate}</strong><span>중복 항목</span></div>
+        <div><strong>${plan.counts.new}</strong><span>새로 추가됨</span></div>
+        <div><strong>${plan.counts.changed}</strong><span>내용 바뀜</span></div>
+        <div><strong>${plan.counts.same}</strong><span>그대로 유지</span></div>
+        <div><strong>${plan.counts.removed}</strong><span>엑셀에 없음</span></div>
+        <div><strong>${plan.counts.duplicate}</strong><span>이름 중복</span></div>
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
-      <div class="excel-modal-actions">
-        <button class="btn soft" type="button" data-upload-action="add-all">중복 허용하고 추가</button>
-        <button class="btn danger" type="button" data-upload-action="cancel">취소</button>
-        <button class="btn save-pc" type="button" data-upload-action="add-only">중복 항목 빼고 추가</button>
-        <button class="btn excel" type="button" data-upload-action="update">엑셀 기준으로 동기화</button>
+      <div class="excel-modal-note">
+        <strong>추천:</strong> 2번째 이후 업로드는 <b>엑셀처럼 맞추기</b>가 가장 편해요. 기존 키박스 항목을 지우고 싶지 않다면 <b>삭제 없이 반영</b>을 선택하세요.
       </div>
-      <p class="excel-modal-warn">‘중복 허용하고 추가’를 선택하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
+      ${syncNotice}
+      <div class="excel-modal-actions">
+        <button class="btn sync-main" type="button" data-upload-action="update">엑셀처럼 맞추기</button>
+        <button class="btn modal-merge" type="button" data-upload-action="merge">삭제 없이 반영</button>
+        <button class="btn modal-add-only" type="button" data-upload-action="add-only">새 항목만 추가</button>
+        <button class="btn duplicate-add" type="button" data-upload-action="add-all">중복까지 모두 새로 추가</button>
+        <button class="btn modal-cancel" type="button" data-upload-action="cancel">취소</button>
+      </div>
+      <p class="excel-modal-warn">중복까지 모두 새로 추가하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
     </div>
   `;
   modal.addEventListener("click", (event) => {
@@ -1081,9 +1090,9 @@ function showUploadReviewModal(plan) {
       let confirmMsg;
       if (plan.counts.removed >= 10) {
         const keptTotal = plan.counts.new + plan.counts.changed + plan.counts.same;
-        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제되고, 엑셀의 ${keptTotal}개 항목만 남게 됩니다.\n정말 동기화하시겠어요?`;
+        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 빠지고, 엑셀의 ${keptTotal}개 항목만 남게 됩니다.\n엑셀처럼 맞출까요?`;
       } else {
-        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`;
+        confirmMsg = `엑셀에 없는 기존 항목 ${plan.counts.removed}개가 키박스에서 빠집니다.\n엑셀처럼 맞출까요?`;
       }
       const ok = confirm(confirmMsg);
       if (!ok) return;
@@ -1206,7 +1215,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.0",
+    version: "v3.1.7",
     exportedAt: new Date().toISOString(),
     data: state
   };
