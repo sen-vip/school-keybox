@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.14 — 통합 정리본
+   우리학교 키박스 v3.1.15 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -5138,7 +5138,7 @@ td{
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 
-/* v3.1.14: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
+/* v3.1.15: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
 .section-arrived{
   animation:keyboxSectionArrive 1.12s ease-out 1;
 }
@@ -5192,7 +5192,7 @@ td{
 
 
 
-/* v3.1.14: 사이트 계정과 정보 섹션 톤앤매너 통일 */
+/* v3.1.15: 사이트 계정과 정보 섹션 톤앤매너 통일 */
 .info-card{
   position:relative!important;
   overflow:hidden!important;
@@ -5282,7 +5282,7 @@ td{
 
 
 /* ============================================================
-   v3.1.14 info section polish
+   v3.1.15 info section polish
    - 학교정보/은행계좌/결제수단의 왼쪽 포인트라인 제거
    - 사이트 계정 카드와 톤은 맞추되, 정보 섹션은 조용한 목록형으로 유지
    ============================================================ */
@@ -5347,7 +5347,7 @@ td{
 }
 
 /* ============================================================
-   v3.1.14 upload diagnostics + typography stabilization
+   v3.1.15 upload diagnostics + typography stabilization
    - 포인트라인 없이 글씨 두께/컬러만 차분하게 통일
    - 업로드 모달에서 읽은 행/제외된 행을 확인할 수 있게 표시
    ============================================================ */
@@ -5585,5 +5585,70 @@ th{
   .excel-diagnostics-detail li{
     flex-direction:column;
     gap:3px;
+  }
+}
+
+/* ============================================================
+   v3.1.15 info row readability micro-adjustment
+   - 정보행 라벨/값을 살짝 키우되 과하게 진하게 하지 않음
+   - 사이트 계정 ID/PW와 아래 정보 섹션의 글씨 리듬을 부드럽게 맞춤
+   ============================================================ */
+:root{
+  --keybox-info-label:#5F6F86;
+  --keybox-info-value:#243247;
+}
+
+/* 사이트 계정 카드의 ID/PW 라벨·값 */
+.credential-label,
+.account-row-card .credential-label{
+  font-size:13px!important;
+  font-weight:660!important;
+  color:var(--keybox-info-label)!important;
+  letter-spacing:-.2px!important;
+}
+.credential-input,
+.account-row-card .credential-input{
+  font-size:14.5px!important;
+  font-weight:700!important;
+  color:var(--keybox-info-value)!important;
+  letter-spacing:-.15px!important;
+}
+
+/* 학교정보·은행계좌·결제수단 정보행 라벨·값 */
+.info-card .info-row label,
+.info-card .info-label,
+.info-card .label-input{
+  font-size:13.5px!important;
+  font-weight:680!important;
+  color:#44546A!important;
+  letter-spacing:-.22px!important;
+}
+.info-card .inline-input,
+.info-card .info-value,
+.info-card .table-input{
+  font-size:14.5px!important;
+  font-weight:700!important;
+  color:var(--keybox-info-value)!important;
+  letter-spacing:-.15px!important;
+}
+
+/* 입력칸 자체는 커졌어도 표처럼 무겁지 않게 유지 */
+.info-card .info-row{
+  min-height:52px!important;
+}
+.info-card .info-row .copy-pill.copy-icon-only{
+  transform:none!important;
+}
+
+@media (max-width:720px){
+  .info-card .info-row label,
+  .info-card .info-label,
+  .info-card .label-input{
+    font-size:13px!important;
+  }
+  .info-card .inline-input,
+  .info-card .info-value,
+  .info-card .table-input{
+    font-size:14.5px!important;
   }
 }
