@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.1.13 — 포인트라인 제거·정보섹션 톤 보정
+// 우리학교 키박스 v3.1.14 — 포인트라인 제거·정보섹션 톤 보정
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -1180,9 +1180,46 @@ function parseUploadedWorkbook(wb) {
   const uploadedInfo = { school: [], bank: [], card: [] };
   let uploadedAccounts = [];
   const duplicateAccounts = [];
+  const ignoredAccounts = [];
+
+  const diagnostics = {
+    sheetNames: Array.isArray(wb?.SheetNames) ? wb.SheetNames.slice() : [],
+    infoSheetName: "",
+    accountsSheetName: "",
+    infoRawRows: 0,
+    infoAcceptedRows: 0,
+    accountsRawRows: 0,
+    accountsAcceptedRows: 0,
+    ignoredAccounts,
+    duplicateAccounts
+  };
+
+  function rowHasAnyValue(row) {
+    return Array.isArray(row) && row.some(value => cleanImportText(value));
+  }
+  function pushIgnoredAccount(reason, rowNumber, account, row) {
+    ignoredAccounts.push({
+      reason,
+      rowNumber,
+      site: cleanImportText(account?.site),
+      id: cleanImportText(account?.id),
+      password: cleanImportText(account?.password),
+      memo: cleanImportText(account?.memo),
+      raw: Array.isArray(row) ? row.map(cleanImportText).filter(Boolean).slice(0, 8).join(" / ") : ""
+    });
+  }
+  function pushDuplicateAccount(account, rowNumber, row) {
+    const duplicate = normalizeUploadedAccount(account);
+    duplicate.rowNumber = rowNumber;
+    duplicate.raw = Array.isArray(row) ? row.map(cleanImportText).filter(Boolean).slice(0, 8).join(" / ") : "";
+    duplicateAccounts.push(duplicate);
+  }
 
   const infoSheetName = findWorkbookSheetName(wb, ["기본정보", "학교정보", "기본 정보", "학교 정보", "공통정보", "공통 정보"]);
   const accSheetName = findWorkbookSheetName(wb, ["계정입력", "계정정보", "계정 입력", "계정 정보", "사이트계정", "사이트 계정"]);
+
+  diagnostics.infoSheetName = infoSheetName || "";
+  diagnostics.accountsSheetName = accSheetName || "";
 
   const hasInfoSheet = !!infoSheetName;
   const hasAccountsSheet = !!accSheetName;
@@ -1195,7 +1232,9 @@ function parseUploadedWorkbook(wb) {
       const groupCol = getHeaderIndex(headerMap, ["구분", "분류", "그룹", "섹션", "종류"]);
       const labelCol = getHeaderIndex(headerMap, ["항목", "항목명", "이름", "라벨", "제목"]);
       const valueCol = getHeaderIndex(headerMap, ["값", "내용", "정보", "데이터", "입력값"]);
-      rows.slice(1).forEach(row => {
+      rows.slice(1).forEach((row) => {
+        if (!rowHasAnyValue(row)) return;
+        diagnostics.infoRawRows += 1;
         const group = cellByHeader(row, groupCol, row[0]);
         const labelText = cellByHeader(row, labelCol, row[1]);
         const valueText = cellByHeader(row, valueCol, row[2]);
@@ -1207,6 +1246,7 @@ function parseUploadedWorkbook(wb) {
             ? "card"
             : "school";
         uploadedInfo[key].push([labelText, valueText]);
+        diagnostics.infoAcceptedRows += 1;
       });
     } catch (err) {
       console.error(err);
@@ -1229,7 +1269,10 @@ function parseUploadedWorkbook(wb) {
       const useHeader = siteCol >= 0;
       const firstHeaderIsCategory = cleanImportText(header[0]).replace(/\s+/g, "").includes("분류");
       const seenKeys = new Set();
-      uploadedAccounts = rows.slice(1).map(row => {
+      rows.slice(1).forEach((row, rowIdx) => {
+        if (!rowHasAnyValue(row)) return;
+        diagnostics.accountsRawRows += 1;
+        const rowNumber = rowIdx + 2;
         const account = useHeader
           ? normalizeUploadedAccount({
               category: cellByHeader(row, categoryCol, "기타") || "기타",
@@ -1249,28 +1292,37 @@ function parseUploadedWorkbook(wb) {
               url: cellByHeader(row, firstHeaderIsCategory ? 5 : 4),
               favorite: parseFavoriteValue(cellByHeader(row, firstHeaderIsCategory ? 6 : 5))
             });
-        return account;
-      }).filter(account => {
-        if (!accountHasMeaningfulValue(account)) return false;
+        if (!accountHasMeaningfulValue(account)) {
+          pushIgnoredAccount("사이트명이 비어 있음", rowNumber, account, row);
+          return;
+        }
         const key = importAccountKey(account);
         if (seenKeys.has(key)) {
-          duplicateAccounts.push(account);
-          return false;
+          pushDuplicateAccount(account, rowNumber, row);
+          return;
         }
         seenKeys.add(key);
-        return true;
+        uploadedAccounts.push(account);
+        diagnostics.accountsAcceptedRows += 1;
       });
     } catch (err) {
       console.error(err);
     }
   } else if (wb.SheetNames.length) {
-    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const sheetName = wb.SheetNames[0];
+    const sheet = wb.Sheets[sheetName];
+    diagnostics.accountsSheetName = sheetName;
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
     let currentCategory = "기타";
     const seenKeysFallback = new Set();
-    rows.forEach(r => {
+    rows.forEach((r, rowIdx) => {
+      if (!rowHasAnyValue(r)) return;
+      diagnostics.accountsRawRows += 1;
       const b = cleanImportText(r[1]);
-      if (!b || b === "사이트명" || b.includes("학교계정") || b.includes("학교 공통") || b.includes("계좌정보") || b.includes("결제 수단") || b.includes("사이트 계정 관리")) return;
+      if (!b || b === "사이트명" || b.includes("학교계정") || b.includes("학교 공통") || b.includes("계좌정보") || b.includes("결제 수단") || b.includes("사이트 계정 관리")) {
+        if (!b) pushIgnoredAccount("사이트명 위치를 찾지 못함", rowIdx + 1, {}, r);
+        return;
+      }
       if (/^[0-9]️⃣/.test(b)) {
         currentCategory = b;
         return;
@@ -1285,13 +1337,18 @@ function parseUploadedWorkbook(wb) {
           url: cleanImportText(r[8]),
           favorite: false
         });
+        if (!accountHasMeaningfulValue(acc)) {
+          pushIgnoredAccount("사이트명이 비어 있음", rowIdx + 1, acc, r);
+          return;
+        }
         const key = importAccountKey(acc);
         if (seenKeysFallback.has(key)) {
-          duplicateAccounts.push(acc);
+          pushDuplicateAccount(acc, rowIdx + 1, r);
           return;
         }
         seenKeysFallback.add(key);
         uploadedAccounts.push(acc);
+        diagnostics.accountsAcceptedRows += 1;
       }
     });
   }
@@ -1300,6 +1357,8 @@ function parseUploadedWorkbook(wb) {
     info: uploadedInfo,
     accounts: normalizeAccountDefaults(uploadedAccounts),
     duplicateAccounts,
+    ignoredAccounts,
+    diagnostics,
     hasInfoSheet,
     hasAccountsSheet
   };
@@ -1532,6 +1591,55 @@ function resetUploadInput() {
   const uploadInput = document.getElementById("uploadInput");
   if (uploadInput) uploadInput.value = "";
 }
+
+function diagnosticAccountLabel(item) {
+  const site = cleanImportText(item?.site) || "사이트명 없음";
+  const id = cleanImportText(item?.id);
+  const row = item?.rowNumber ? `${item.rowNumber}행 · ` : "";
+  return `${row}${site}${id ? ` / ${id}` : ""}`;
+}
+function buildUploadDiagnosticsHtml(plan) {
+  const uploaded = plan?.uploaded || {};
+  const diagnostics = uploaded.diagnostics || {};
+  const accountRead = Number(diagnostics.accountsRawRows || 0);
+  const accountAccepted = Number(diagnostics.accountsAcceptedRows || (uploaded.accounts || []).length || 0);
+  const accountExcluded = Math.max(0, accountRead - accountAccepted);
+  const infoRead = Number(diagnostics.infoRawRows || 0);
+  const infoAccepted = Number(diagnostics.infoAcceptedRows || 0);
+  const ignored = Array.isArray(uploaded.ignoredAccounts) ? uploaded.ignoredAccounts : [];
+  const duplicates = Array.isArray(uploaded.duplicateAccounts) ? uploaded.duplicateAccounts : [];
+  const detailItems = [
+    ...ignored.map(item => ({...item, reason: item.reason || "제외됨"})),
+    ...duplicates.map(item => ({...item, reason: "엑셀 안 완전 중복"}))
+  ];
+  const detailHtml = detailItems.length
+    ? `<details class="excel-diagnostics-detail">
+        <summary>제외된 행 ${detailItems.length}개 보기</summary>
+        <ul>
+          ${detailItems.slice(0, 12).map(item => `<li><b>${esc(item.reason)}</b><span>${esc(diagnosticAccountLabel(item))}</span></li>`).join("")}
+          ${detailItems.length > 12 ? `<li><b>더 있음</b><span>외 ${detailItems.length - 12}개</span></li>` : ""}
+        </ul>
+      </details>`
+    : "";
+  const accountToneClass = accountExcluded > 0 ? "has-warning" : "";
+  return `
+    <div class="excel-diagnostics" aria-label="엑셀 읽기 진단">
+      <div class="excel-diagnostic-row ${accountToneClass}">
+        <strong>사이트 계정</strong>
+        <span>엑셀에서 읽은 행 ${accountRead}개 · 실제 비교 ${accountAccepted}개 · 제외 ${accountExcluded}개</span>
+      </div>
+      <div class="excel-diagnostic-row">
+        <strong>학교/계좌/결제 정보</strong>
+        <span>엑셀에서 읽은 행 ${infoRead}개 · 실제 비교 ${infoAccepted}개</span>
+      </div>
+      <div class="excel-diagnostic-row muted">
+        <strong>읽은 시트</strong>
+        <span>${esc(diagnostics.accountsSheetName || "계정 시트 없음")} / ${esc(diagnostics.infoSheetName || "기본정보 시트 없음")}</span>
+      </div>
+      ${detailHtml}
+    </div>
+  `;
+}
 function showUploadReviewModal(plan) {
   closeUploadModal();
   // Determine how many unique rows the plan contains.  When there are
@@ -1567,6 +1675,7 @@ function showUploadReviewModal(plan) {
   const syncNotice = plan.counts.removed > 0
     ? `<p class="excel-modal-sync-warning">주의: 엑셀에 없는 기존 항목 <b>${plan.counts.removed}개</b>는 동기화하면 키박스에서 빠져요.</p>`
     : `<p class="excel-modal-sync-safe">엑셀처럼 맞추기는 새 항목·바뀐 내용·빠진 항목까지 엑셀 파일 기준으로 맞춰요.</p>`;
+  const diagnosticsHtml = buildUploadDiagnosticsHtml(plan);
 
   const modal = document.createElement("div");
   modal.id = "excelUploadModal";
@@ -1576,7 +1685,8 @@ function showUploadReviewModal(plan) {
       <button class="excel-modal-close" type="button" data-upload-action="cancel" aria-label="닫기">×</button>
       <div class="excel-modal-kicker">엑셀 업로드</div>
       <h3 id="excelUploadModalTitle">엑셀 파일과 비교했어요</h3>
-      <p class="excel-modal-desc">기존 키박스와 업로드한 엑셀을 비교한 결과예요. 엑셀을 최신 원본으로 관리한다면 <b>엑셀처럼 맞추기</b>를 쓰면 돼요.</p>
+      <p class="excel-modal-desc">기존 키박스와 업로드한 엑셀을 비교한 결과예요. 먼저 엑셀에서 몇 개를 읽었는지 확인한 뒤 반영 방식을 선택하세요.</p>
+      ${diagnosticsHtml}
       <div class="excel-modal-summary" aria-label="업로드 비교 결과">
         <div><strong>${plan.counts.new}</strong><span>새로 추가됨</span></div>
         <div><strong>${plan.counts.changed}</strong><span>내용 바뀜</span></div>
@@ -1747,7 +1857,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.13",
+    version: "v3.1.14",
     exportedAt: new Date().toISOString(),
     data: state
   };

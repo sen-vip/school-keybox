@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.13 — 통합 정리본
+   우리학교 키박스 v3.1.14 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -5138,7 +5138,7 @@ td{
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 
-/* v3.1.13: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
+/* v3.1.14: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
 .section-arrived{
   animation:keyboxSectionArrive 1.12s ease-out 1;
 }
@@ -5192,7 +5192,7 @@ td{
 
 
 
-/* v3.1.13: 사이트 계정과 정보 섹션 톤앤매너 통일 */
+/* v3.1.14: 사이트 계정과 정보 섹션 톤앤매너 통일 */
 .info-card{
   position:relative!important;
   overflow:hidden!important;
@@ -5282,7 +5282,7 @@ td{
 
 
 /* ============================================================
-   v3.1.13 info section polish
+   v3.1.14 info section polish
    - 학교정보/은행계좌/결제수단의 왼쪽 포인트라인 제거
    - 사이트 계정 카드와 톤은 맞추되, 정보 섹션은 조용한 목록형으로 유지
    ============================================================ */
@@ -5343,5 +5343,247 @@ td{
   }
   .info-card-head{
     padding-bottom:12px!important;
+  }
+}
+
+/* ============================================================
+   v3.1.14 upload diagnostics + typography stabilization
+   - 포인트라인 없이 글씨 두께/컬러만 차분하게 통일
+   - 업로드 모달에서 읽은 행/제외된 행을 확인할 수 있게 표시
+   ============================================================ */
+:root{
+  --keybox-page-bg:#F4F7FB;
+  --keybox-surface:#FFFFFF;
+  --keybox-surface-soft:#FBFCFE;
+  --keybox-line:#E3EAF3;
+  --keybox-line-soft:#EEF2F7;
+  --keybox-text-title:#172033;
+  --keybox-text-main:#293548;
+  --keybox-text-muted:#6B7890;
+  --keybox-text-soft:#8491A5;
+  --keybox-blue:#2563EB;
+  --keybox-blue-soft:#F6F9FF;
+  --keybox-blue-line:#D8E7FF;
+}
+body{
+  color:var(--keybox-text-main)!important;
+  background:var(--keybox-page-bg)!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.toolbar,
+.quick-copy,
+.account-card,
+.info-card,
+.search-panel{
+  border-color:var(--keybox-line)!important;
+}
+.section-title,
+.info-card-head{
+  border-bottom-color:var(--keybox-line-soft)!important;
+}
+.section-title h2,
+.info-card h2,
+.quick-copy-head strong{
+  color:var(--keybox-text-title)!important;
+  font-weight:780!important;
+  letter-spacing:-.6px!important;
+}
+.account-title-side p,
+.section-desc,
+.info-sub,
+.quick-copy-head span,
+.search-result-info,
+.count-badge,
+.small-muted{
+  color:var(--keybox-text-muted)!important;
+  font-weight:500!important;
+}
+.account-row-card .site-input,
+.quick-item strong{
+  color:var(--keybox-text-title)!important;
+  font-weight:780!important;
+  letter-spacing:-.45px!important;
+}
+.account-row-card .site-sub,
+.account-row-card .memo-sub,
+.open-url-btn{
+  color:var(--keybox-text-muted)!important;
+  font-weight:500!important;
+}
+.credential-label,
+.info-card .label-input,
+.info-row label,
+.info-label,
+th{
+  color:var(--keybox-text-muted)!important;
+  font-weight:620!important;
+  letter-spacing:-.2px!important;
+}
+.credential-input,
+.info-card .inline-input,
+.account-copy-cell .table-input,
+.inline-input,
+.table-input{
+  color:var(--keybox-text-main)!important;
+  font-weight:680!important;
+  letter-spacing:-.15px!important;
+}
+.account-row-card .credential-row{
+  background:#F9FBFE!important;
+  border-color:var(--keybox-line-soft)!important;
+}
+.info-card{
+  background:var(--keybox-surface)!important;
+  border-color:var(--keybox-line)!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
+}
+.info-card::before,
+.info-card.info-bank::before,
+.info-card.info-pay::before{
+  content:none!important;
+  display:none!important;
+}
+.info-card .info-grid,
+.info-card .info-grid.school-grid{
+  border-color:var(--keybox-line)!important;
+  background:var(--keybox-surface)!important;
+}
+.info-card .info-row,
+.info-card .info-row.selecting{
+  background:var(--keybox-surface)!important;
+  border-color:var(--keybox-line-soft)!important;
+  box-shadow:none!important;
+}
+.info-card .info-row:nth-child(even){
+  background:var(--keybox-surface-soft)!important;
+}
+.info-card .info-row:hover{
+  background:#F8FAFC!important;
+  border-color:var(--keybox-line-soft)!important;
+  box-shadow:none!important;
+}
+.copy-chip,
+.copy-btn,
+.copy-pill,
+.info-card .copy-pill.copy-icon-only{
+  background:var(--keybox-blue-soft)!important;
+  color:var(--keybox-blue)!important;
+  border-color:var(--keybox-blue-line)!important;
+  font-weight:700!important;
+  box-shadow:none!important;
+}
+.copy-chip:hover,
+.copy-btn:hover,
+.copy-pill:hover,
+.info-card .copy-pill.copy-icon-only:hover{
+  background:#EFF6FF!important;
+  border-color:#BFDBFE!important;
+  color:var(--keybox-blue)!important;
+}
+.small-btn,
+.open-url-btn{
+  font-weight:680!important;
+}
+.table-input::placeholder,
+.inline-input::placeholder,
+.label-input::placeholder,
+.memo-sub::placeholder,
+.account-search::placeholder{
+  color:#A8B2C0!important;
+  font-weight:400!important;
+}
+.excel-diagnostics{
+  display:grid;
+  gap:8px;
+  margin:16px 0 14px;
+}
+.excel-diagnostic-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--keybox-line-soft);
+  border-radius:14px;
+  background:#FFFFFF;
+  color:var(--keybox-text-main);
+  font-size:13px;
+}
+.excel-diagnostic-row strong{
+  color:var(--keybox-text-title);
+  font-weight:760;
+  white-space:nowrap;
+}
+.excel-diagnostic-row span{
+  color:var(--keybox-text-muted);
+  font-weight:560;
+  text-align:right;
+}
+.excel-diagnostic-row.has-warning{
+  background:#FFF7ED;
+  border-color:#FED7AA;
+}
+.excel-diagnostic-row.has-warning span{
+  color:#9A3412;
+}
+.excel-diagnostic-row.muted{
+  background:#F8FAFC;
+}
+.excel-diagnostics-detail{
+  border:1px solid var(--keybox-line-soft);
+  border-radius:14px;
+  background:#F8FAFC;
+  overflow:hidden;
+}
+.excel-diagnostics-detail summary{
+  padding:10px 12px;
+  color:#475569;
+  font-size:13px;
+  font-weight:720;
+  cursor:pointer;
+}
+.excel-diagnostics-detail ul{
+  margin:0;
+  padding:0 12px 12px;
+  list-style:none;
+  display:grid;
+  gap:6px;
+}
+.excel-diagnostics-detail li{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:10px;
+  background:#FFFFFF;
+  color:#475569;
+  font-size:12.5px;
+}
+.excel-diagnostics-detail li b{
+  color:#9A3412;
+  font-weight:760;
+  white-space:nowrap;
+}
+.excel-diagnostics-detail li span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:right;
+}
+@media (max-width:720px){
+  .excel-diagnostic-row{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:4px;
+  }
+  .excel-diagnostic-row span,
+  .excel-diagnostics-detail li span{
+    text-align:left;
+  }
+  .excel-diagnostics-detail li{
+    flex-direction:column;
+    gap:3px;
   }
 }
