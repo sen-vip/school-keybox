@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.11 — 통합 정리본
+   우리학교 키박스 v3.1.13 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -5138,7 +5138,7 @@ td{
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 
-/* v3.1.11: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
+/* v3.1.13: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
 .section-arrived{
   animation:keyboxSectionArrive 1.12s ease-out 1;
 }
@@ -5190,3 +5190,158 @@ td{
   .search-panel.section-arrived{animation:none!important;}
 }
 
+
+
+/* v3.1.13: 사이트 계정과 정보 섹션 톤앤매너 통일 */
+.info-card{
+  position:relative!important;
+  overflow:hidden!important;
+  background:#FFFFFF!important;
+  border:1px solid #DCE6F2!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.045)!important;
+}
+.info-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:18px;
+  bottom:18px;
+  width:4px;
+  border-radius:999px;
+  background:#60A5FA;
+}
+.info-card.info-bank::before{background:#8B5CF6;}
+.info-card.info-pay::before{background:#38BDF8;}
+.info-card-head{
+  padding-left:6px!important;
+}
+.info-card h2{
+  color:#0F172A!important;
+  font-size:22px!important;
+  font-weight:850!important;
+  letter-spacing:-.65px!important;
+}
+.info-card .info-sub{
+  color:#64748B!important;
+  font-size:12px!important;
+  font-weight:750!important;
+}
+.info-card .info-grid{
+  margin-left:6px!important;
+  border:1px solid #E1E9F2!important;
+  background:#FFFFFF!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+}
+.info-card .info-row,
+.info-card .info-row.selecting{
+  background:#FFFFFF!important;
+  border-bottom:1px solid #E7EEF6!important;
+}
+.info-card .info-row:nth-child(even){
+  background:#FAFCFF!important;
+}
+.info-card .info-row:hover{
+  background:#F8FAFC!important;
+  box-shadow:inset 3px 0 0 rgba(96,165,250,.52)!important;
+}
+.info-card .label-input{
+  color:#475569!important;
+  font-weight:720!important;
+}
+.info-card .inline-input{
+  color:#10233F!important;
+  font-weight:820!important;
+}
+.info-card .copy-pill.copy-icon-only{
+  background:#EFF6FF!important;
+  color:#2563EB!important;
+  border-color:#BFDBFE!important;
+}
+.info-card .copy-pill.copy-icon-only:hover{
+  background:#DBEAFE!important;
+  border-color:#93C5FD!important;
+}
+.excel-modal-note span{
+  display:inline-block;
+  margin-top:4px;
+  color:#475569;
+  font-size:13px;
+  font-weight:700;
+}
+@media (max-width:760px){
+  .info-card::before{
+    top:16px;
+    bottom:16px;
+  }
+  .info-card-head,
+  .info-card .info-grid{
+    margin-left:4px!important;
+  }
+}
+
+
+/* ============================================================
+   v3.1.13 info section polish
+   - 학교정보/은행계좌/결제수단의 왼쪽 포인트라인 제거
+   - 사이트 계정 카드와 톤은 맞추되, 정보 섹션은 조용한 목록형으로 유지
+   ============================================================ */
+.info-card{
+  overflow:visible!important;
+  border-color:#E2EAF4!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.04)!important;
+}
+.info-card::before,
+.info-card.info-bank::before,
+.info-card.info-pay::before{
+  content:none!important;
+  display:none!important;
+}
+.info-card-head{
+  padding-left:0!important;
+  padding-bottom:13px!important;
+  margin-bottom:14px!important;
+  border-bottom:1px solid #EEF3F8!important;
+}
+.info-card h2{
+  color:#0F172A!important;
+}
+.info-card .info-sub{
+  color:#64748B!important;
+}
+.info-card .info-grid,
+.info-card .info-grid.school-grid{
+  margin-left:0!important;
+  border-color:#E3EBF5!important;
+  border-radius:18px!important;
+  background:#FFFFFF!important;
+}
+.info-card .info-row,
+.info-card .info-row.selecting{
+  border-bottom-color:#E8EEF6!important;
+}
+.info-card .info-row:nth-child(even){
+  background:#FBFDFF!important;
+}
+.info-card .info-row:hover{
+  background:#F8FAFC!important;
+  box-shadow:none!important;
+}
+.info-card .label-input{
+  color:#4B5F77!important;
+  font-weight:700!important;
+}
+.info-card .inline-input{
+  color:#10233F!important;
+  font-weight:820!important;
+}
+@media (max-width:760px){
+  .info-card-head,
+  .info-card .info-grid,
+  .info-card .info-grid.school-grid{
+    margin-left:0!important;
+  }
+  .info-card-head{
+    padding-bottom:12px!important;
+  }
+}

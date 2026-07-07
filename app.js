@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.1.11 — 통합 정리본
+// 우리학교 키박스 v3.1.13 — 포인트라인 제거·정보섹션 톤 보정
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -1105,6 +1105,29 @@ function dropRow(event, targetIndex) {
 // ============================================================
 // 엑셀 다운로드/업로드
 // ============================================================
+
+function forceTextWorksheet(ws) {
+  if (!ws) return ws;
+  Object.keys(ws).forEach(addr => {
+    if (addr.startsWith("!")) return;
+    if (!ws[addr]) return;
+    ws[addr].t = "s";
+    ws[addr].z = "@";
+    ws[addr].v = cleanImportText(ws[addr].v);
+  });
+  return ws;
+}
+
+function persistBrowserSaveSilently() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
 async function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const infoRows = [["구분", "항목", "값"]];
@@ -1113,8 +1136,8 @@ async function downloadTemplate() {
   }
   const inputRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
   DEFAULT_ACCOUNTS.forEach(a => inputRows.push([a.site, a.id, a.password, a.memo, a.url || "", a.favorite ? "Y" : ""]));
-  const infoWs = XLSX.utils.aoa_to_sheet(infoRows);
-  const accWs = XLSX.utils.aoa_to_sheet(inputRows);
+  const infoWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(infoRows));
+  const accWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(inputRows));
   infoWs["!cols"] = [{wch:18},{wch:24},{wch:36}];
   accWs["!cols"] = [{wch:34},{wch:24},{wch:24},{wch:42},{wch:46},{wch:10}];
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
@@ -1123,35 +1146,59 @@ async function downloadTemplate() {
   showToast("개인 정보가 빠진 기본 입력파일을 다운로드했어요.");
 }
 
+
+function normalizeSheetLookupName(name) {
+  return cleanImportText(name).replace(/[\s_\-()（）\[\]【】]/g, "").toLowerCase();
+}
+function findWorkbookSheetName(wb, candidates) {
+  const normalizedCandidates = candidates.map(normalizeSheetLookupName);
+  return wb.SheetNames.find(name => normalizedCandidates.includes(normalizeSheetLookupName(name))) || null;
+}
+function makeHeaderMap(headerRow) {
+  const map = new Map();
+  (headerRow || []).forEach((value, idx) => {
+    const key = cleanImportText(value).replace(/\s+/g, "").toLowerCase();
+    if (key && !map.has(key)) map.set(key, idx);
+  });
+  return map;
+}
+function getHeaderIndex(headerMap, aliases) {
+  for (const alias of aliases) {
+    const key = cleanImportText(alias).replace(/\s+/g, "").toLowerCase();
+    if (headerMap.has(key)) return headerMap.get(key);
+  }
+  return -1;
+}
+function cellByHeader(row, idx, fallback = "") {
+  return idx >= 0 ? cleanImportText(row[idx]) : cleanImportText(fallback);
+}
+function accountHasMeaningfulValue(account) {
+  return !!cleanImportText(account?.site) && !["…", "..."].includes(cleanImportText(account?.site));
+}
+
 function parseUploadedWorkbook(wb) {
-  // This function reads workbook sheets and returns structured info, accounts, duplicateAccounts and flags.
-  // It supports legacy sheet names and performs duplicate detection within the uploaded accounts.
   const uploadedInfo = { school: [], bank: [], card: [] };
   let uploadedAccounts = [];
   const duplicateAccounts = [];
 
-  // Determine sheet names. 기본정보 is preferred for info; older files may use 학교정보.
-  const infoSheetName = wb.SheetNames.includes("기본정보")
-    ? "기본정보"
-    : wb.SheetNames.includes("학교정보")
-      ? "학교정보"
-      : null;
-  // 계정입력 is preferred for accounts; older files may use 계정정보.
-  const accSheetName = wb.SheetNames.includes("계정입력")
-    ? "계정입력"
-    : wb.SheetNames.includes("계정정보")
-      ? "계정정보"
-      : null;
+  const infoSheetName = findWorkbookSheetName(wb, ["기본정보", "학교정보", "기본 정보", "학교 정보", "공통정보", "공통 정보"]);
+  const accSheetName = findWorkbookSheetName(wb, ["계정입력", "계정정보", "계정 입력", "계정 정보", "사이트계정", "사이트 계정"]);
 
   const hasInfoSheet = !!infoSheetName;
   const hasAccountsSheet = !!accSheetName;
 
-  // Parse info sheet if available
   if (hasInfoSheet) {
     try {
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName], { header: 1, defval: "" });
-      rows.slice(1).forEach(([group, label, value]) => {
-        const labelText = cleanImportText(label);
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName], { header: 1, defval: "", raw: false });
+      const header = rows[0] || [];
+      const headerMap = makeHeaderMap(header);
+      const groupCol = getHeaderIndex(headerMap, ["구분", "분류", "그룹", "섹션", "종류"]);
+      const labelCol = getHeaderIndex(headerMap, ["항목", "항목명", "이름", "라벨", "제목"]);
+      const valueCol = getHeaderIndex(headerMap, ["값", "내용", "정보", "데이터", "입력값"]);
+      rows.slice(1).forEach(row => {
+        const group = cellByHeader(row, groupCol, row[0]);
+        const labelText = cellByHeader(row, labelCol, row[1]);
+        const valueText = cellByHeader(row, valueCol, row[2]);
         if (!labelText) return;
         const g = String(group || "");
         const key = g.includes("은행")
@@ -1159,69 +1206,66 @@ function parseUploadedWorkbook(wb) {
           : g.includes("결제") || g.includes("카드")
             ? "card"
             : "school";
-        uploadedInfo[key].push([labelText, cleanImportText(value)]);
+        uploadedInfo[key].push([labelText, valueText]);
       });
     } catch (err) {
       console.error(err);
     }
   }
 
-  // Parse accounts sheet if available
   if (hasAccountsSheet) {
     try {
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[accSheetName], { header: 1, defval: "" });
-      const header = (rows[0] || []).map(x => cleanImportText(x));
-      const isOld = header[0] && header[0].includes("분류");
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[accSheetName], { header: 1, defval: "", raw: false });
+      const header = rows[0] || [];
+      const headerMap = makeHeaderMap(header);
+      const categoryCol = getHeaderIndex(headerMap, ["분류", "구분", "카테고리", "종류"]);
+      const siteCol = getHeaderIndex(headerMap, ["사이트명", "사이트", "계정명", "이름", "서비스명", "쇼핑몰", "기관명"]);
+      const idCol = getHeaderIndex(headerMap, ["아이디", "id", "ID", "계정", "계정ID", "로그인ID", "사용자ID"]);
+      const passwordCol = getHeaderIndex(headerMap, ["비밀번호", "password", "PW", "pw", "패스워드", "암호"]);
+      const memoCol = getHeaderIndex(headerMap, ["메모", "비고", "설명", "기관", "담당", "부서"]);
+      const urlCol = getHeaderIndex(headerMap, ["URL", "url", "접속주소", "주소", "링크", "홈페이지"]);
+      const favCol = getHeaderIndex(headerMap, ["즐겨찾기", "favorite", "빠른복사", "즐겨"]);
+
+      const useHeader = siteCol >= 0;
+      const firstHeaderIsCategory = cleanImportText(header[0]).replace(/\s+/g, "").includes("분류");
       const seenKeys = new Set();
-      uploadedAccounts = rows
-        .slice(1)
-        .filter(r => {
-          const v0 = cleanImportText(r[0] || r[1]);
-          return v0 && !["…", "..."].includes(v0);
-        })
-        .map(r => {
-          if (isOld) {
-            return normalizeUploadedAccount({
-              category: cleanImportText(r[0] || "기타"),
-              site: normalizeSiteName(r[1] || ""),
-              id: cleanImportText(r[2]),
-              password: cleanImportText(r[3]),
-              memo: cleanImportText(r[4]),
-              url: cleanImportText(r[5]),
-              favorite: parseFavoriteValue(r[6])
+      uploadedAccounts = rows.slice(1).map(row => {
+        const account = useHeader
+          ? normalizeUploadedAccount({
+              category: cellByHeader(row, categoryCol, "기타") || "기타",
+              site: normalizeSiteName(cellByHeader(row, siteCol)),
+              id: cellByHeader(row, idCol),
+              password: cellByHeader(row, passwordCol),
+              memo: cellByHeader(row, memoCol),
+              url: cellByHeader(row, urlCol),
+              favorite: parseFavoriteValue(cellByHeader(row, favCol))
+            })
+          : normalizeUploadedAccount({
+              category: firstHeaderIsCategory ? cellByHeader(row, 0, "기타") : "기타",
+              site: normalizeSiteName(cellByHeader(row, firstHeaderIsCategory ? 1 : 0)),
+              id: cellByHeader(row, firstHeaderIsCategory ? 2 : 1),
+              password: cellByHeader(row, firstHeaderIsCategory ? 3 : 2),
+              memo: cellByHeader(row, firstHeaderIsCategory ? 4 : 3),
+              url: cellByHeader(row, firstHeaderIsCategory ? 5 : 4),
+              favorite: parseFavoriteValue(cellByHeader(row, firstHeaderIsCategory ? 6 : 5))
             });
-          }
-          const urlCol = header.findIndex(h => /url|접속|링크|주소/i.test(h));
-          const favCol = header.findIndex(h => /즐겨|favorite/i.test(h));
-          const defaultFavCol = urlCol >= 0 ? 5 : 4;
-          return normalizeUploadedAccount({
-            category: "기타",
-            site: normalizeSiteName(r[0] || ""),
-            id: cleanImportText(r[1]),
-            password: cleanImportText(r[2]),
-            memo: cleanImportText(r[3]),
-            url: cleanImportText(urlCol >= 0 ? r[urlCol] : ""),
-            favorite: parseFavoriteValue(favCol >= 0 ? r[favCol] : r[defaultFavCol])
-          });
-        })
-        .filter(a => {
-          const s = cleanImportText(a.site);
-          if (!s || ["…", "..."].includes(s)) return false;
-          const key = [a.site, a.id, a.password, a.url].map(x => importCompareText(x)).join("||");
-          if (seenKeys.has(key)) {
-            duplicateAccounts.push(a);
-            return false;
-          }
-          seenKeys.add(key);
-          return true;
-        });
+        return account;
+      }).filter(account => {
+        if (!accountHasMeaningfulValue(account)) return false;
+        const key = importAccountKey(account);
+        if (seenKeys.has(key)) {
+          duplicateAccounts.push(account);
+          return false;
+        }
+        seenKeys.add(key);
+        return true;
+      });
     } catch (err) {
       console.error(err);
     }
   } else if (wb.SheetNames.length) {
-    // Fallback: Old "예쁜 출력" format
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
     let currentCategory = "기타";
     const seenKeysFallback = new Set();
     rows.forEach(r => {
@@ -1241,7 +1285,7 @@ function parseUploadedWorkbook(wb) {
           url: cleanImportText(r[8]),
           favorite: false
         });
-        const key = [acc.site, acc.id, acc.password, acc.url].map(x => importCompareText(x)).join("||");
+        const key = importAccountKey(acc);
         if (seenKeysFallback.has(key)) {
           duplicateAccounts.push(acc);
           return;
@@ -1291,7 +1335,11 @@ function importInfoKey(row) {
   return importKeyText(row?.[0]);
 }
 function importAccountKey(acc) {
-  return importKeyText(acc?.site);
+  const site = importKeyText(acc?.site);
+  const id = importCompareText(acc?.id).replace(/\s+/g, "");
+  const url = importCompareText(acc?.url).replace(/\s+/g, "");
+  if (!site) return "";
+  return [site, id || "__blank_id__", id ? "" : url].join("||");
 }
 function sameInfoRow(a, b) {
   return importCompareText(a?.[0]) === importCompareText(b?.[0]) && importCompareText(a?.[1]) === importCompareText(b?.[1]);
@@ -1299,6 +1347,22 @@ function sameInfoRow(a, b) {
 function sameAccountContent(a, b) {
   const fields = ["category", "site", "id", "password", "memo", "url"];
   return fields.every(field => importCompareText(a?.[field]) === importCompareText(b?.[field]));
+}
+function mergeInfoRowPreservingBlank(existingRow, uploadedRow) {
+  const label = cleanImportText(uploadedRow?.[0]) || cleanImportText(existingRow?.[0]);
+  const uploadedValue = cleanImportText(uploadedRow?.[1]);
+  const existingValue = cleanImportText(existingRow?.[1]);
+  return [label, uploadedValue || existingValue];
+}
+function mergeAccountPreservingBlanks(existing, uploaded) {
+  const base = normalizeUploadedAccount(existing || {});
+  const incoming = normalizeUploadedAccount(uploaded || {});
+  ["category", "site", "id", "password", "memo", "url"].forEach(field => {
+    const value = cleanImportText(incoming[field]);
+    if (value) base[field] = value;
+  });
+  base.favorite = existing?.favorite === true || incoming.favorite === true;
+  return base;
 }
 function buildUploadPlan(uploaded) {
   const plan = {
@@ -1412,8 +1476,9 @@ function applyUploadPlan(plan, mode) {
     }
     state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
     deleteMode = { info: {}, account: {} };
+    const saved = persistBrowserSaveSilently();
     render();
-    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요. 보관하려면 브라우저에 저장을 눌러주세요.`);
+    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요.${saved ? " 브라우저에도 저장했어요." : " 브라우저 저장은 실패했어요."}`);
     return;
   }
 
@@ -1428,7 +1493,7 @@ function applyUploadPlan(plan, mode) {
       if (item.type === "new") {
         nextState.info[key].push([...item.uploaded]);
       } else if (mode === "merge" && item.type === "changed" && item.existingIndex >= 0) {
-        nextState.info[key][item.existingIndex] = [...item.uploaded];
+        nextState.info[key][item.existingIndex] = mergeInfoRowPreservingBlank(nextState.info[key][item.existingIndex], item.uploaded);
       }
     });
   }
@@ -1444,19 +1509,20 @@ function applyUploadPlan(plan, mode) {
       nextState.accounts.push(uploaded);
     } else if (mode === "merge" && item.type === "changed" && item.existingIndex >= 0) {
       const existingFavorite = nextState.accounts[item.existingIndex]?.favorite === true;
-      nextState.accounts[item.existingIndex] = { ...nextState.accounts[item.existingIndex], ...uploaded, favorite: existingFavorite };
+      nextState.accounts[item.existingIndex] = { ...mergeAccountPreservingBlanks(nextState.accounts[item.existingIndex], uploaded), favorite: existingFavorite };
     }
   });
 
   state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
   deleteMode = { info: {}, account: {} };
+  const saved = persistBrowserSaveSilently();
   render();
   const message = mode === "add-only"
     ? `새 항목 ${plan.counts.new}개만 추가했어요.`
     : mode === "merge"
       ? `새 항목 ${plan.counts.new}개 추가, 내용 바뀐 항목 ${plan.counts.changed}개를 반영했어요.`
       : `업로드 항목 ${planItemList(plan).length}개를 새 항목으로 추가했어요.`;
-  showToast(`${message} 보관하려면 브라우저에 저장을 눌러주세요.`);
+  showToast(`${message}${saved ? " 브라우저에도 저장했어요." : " 브라우저 저장은 실패했어요."}`);
 }
 function closeUploadModal() {
   const modal = document.getElementById("excelUploadModal");
@@ -1516,11 +1582,11 @@ function showUploadReviewModal(plan) {
         <div><strong>${plan.counts.changed}</strong><span>내용 바뀜</span></div>
         <div><strong>${plan.counts.same}</strong><span>그대로 유지</span></div>
         <div><strong>${plan.counts.removed}</strong><span>엑셀에 없음</span></div>
-        <div><strong>${plan.counts.duplicate}</strong><span>이름 중복</span></div>
+        <div><strong>${plan.counts.duplicate}</strong><span>완전 중복</span></div>
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
       <div class="excel-modal-note">
-        <strong>추천:</strong> 2번째 이후 업로드는 <b>엑셀처럼 맞추기</b>가 가장 편해요. 기존 키박스 항목을 지우고 싶지 않다면 <b>삭제 없이 반영</b>을 선택하세요.
+        <strong>추천:</strong> 2번째 이후 업로드는 <b>엑셀처럼 맞추기</b>가 가장 편해요. 기존 키박스 항목을 지우고 싶지 않다면 <b>삭제 없이 반영</b>을 선택하세요.<br><span>삭제 없이 반영에서는 엑셀의 빈칸이 기존 값을 지우지 않아요.</span>
       </div>
       ${syncNotice}
       <div class="excel-modal-actions">
@@ -1618,8 +1684,8 @@ function exportBasicExcel() {
   }
   const accountRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
   state.accounts.forEach(a => accountRows.push([a.site || "", a.id || "", a.password || "", a.memo || "", a.url || "", a.favorite ? "Y" : ""]));
-  const infoWs = XLSX.utils.aoa_to_sheet(infoRows);
-  const accWs = XLSX.utils.aoa_to_sheet(accountRows);
+  const infoWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(infoRows));
+  const accWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(accountRows));
   infoWs["!cols"] = [{wch:18},{wch:24},{wch:36}];
   accWs["!cols"] = [{wch:34},{wch:24},{wch:24},{wch:42},{wch:46},{wch:10}];
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
@@ -1681,7 +1747,7 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.11",
+    version: "v3.1.13",
     exportedAt: new Date().toISOString(),
     data: state
   };
