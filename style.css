@@ -1,6 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
-   우리학교 키박스 v3.1.15 — 통합 정리본
+   우리학교 키박스 v3.1.16 — CSS 구조 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
    ============================================================ */
 
@@ -4192,1164 +4192,11 @@ td{
   }
 }
 
-/* v3.1.2 quick copy tone alignment */
-.quick-copy{
-  border-color:#E2E8F0;
-  background:#FFFFFF;
-  box-shadow:0 12px 30px rgba(15,23,42,.05);
-}
-.quick-item{
-  position:relative;
-  border-color:#DCE6F2;
-  background:#FFFFFF;
-  box-shadow:0 8px 20px rgba(15,23,42,.035);
-}
-.quick-item::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:12px;
-  bottom:12px;
-  width:3px;
-  border-radius:999px;
-  background:#3B82F6;
-}
-.quick-item:hover{
-  border-color:#CFE1F6;
-  box-shadow:0 10px 24px rgba(15,23,42,.055);
-}
-.quick-item .site-badge{
-  display:none!important;
-}
-.quick-item .quick-site-label,
-.quick-item .site-label{
-  gap:0;
-  padding-left:2px;
-}
-.quick-item strong{
-  color:#111827;
-  font-weight:900;
-}
-.quick-item .copy-btn{
-  border:1px solid #BFDBFE;
-  background:#EFF6FF;
-  color:#2563EB;
-  font-weight:900;
-}
-.quick-item .copy-btn:hover{
-  background:#DBEAFE;
-}
-
 
 /* ============================================================
-   v3.1.3 card action cleanup + info label readability
-   - 사이트 계정 반복 딱지 제거
-   - 순서 변경 핸들은 평소 화면에서 숨김
-   - 학교/은행/결제 정보의 항목명도 사이트명과 같은 진한 톤으로 보정
-   ============================================================ */
-#siteSection .account-kind-chip,
-#siteSection .account-drag{
-  display:none!important;
-}
-
-#siteSection .account-row-card{
-  cursor:default;
-}
-
-.info-card .label-input{
-  color:#111827;
-  font-weight:850;
-  letter-spacing:-.035em;
-}
-
-.info-card .label-input:hover,
-.info-card .label-input:focus{
-  color:#111827;
-}
-
-.info-card .inline-input{
-  color:#334155;
-  font-weight:650;
-}
-
-.info-card .info-row{
-  border-bottom-color:#E2E8F0;
-}
-
-.info-school .label-input,
-.info-bank .label-input,
-.info-pay .label-input{
-  color:#111827;
-}
-
-/* ============================================================
-   v3.1.4 data management + quick copy + info card refinement
-   - 데이터 관리 드롭다운 잘림/겹침 방지
-   - 엑셀 업로드 확인창 문구/버튼 위계 정리
-   - 빠른복사 3단 구조에서 사이트명 가독성 보강
-   - 학교/은행/결제 정보 행을 사이트 계정 톤과 통일
-   ============================================================ */
-.hero .version-line::first-letter{ }
-
-.toolbar,
-.toolbar-actions,
-.toolbar-actions-full{
-  overflow:visible!important;
-}
-.toolbar{
-  position:relative;
-  z-index:80;
-}
-.data-menu{
-  position:relative!important;
-  z-index:120;
-}
-.data-menu[open]{
-  z-index:10020;
-}
-.data-menu-panel{
-  z-index:10030!important;
-  min-width:220px;
-  max-height:min(62vh,420px);
-  overflow:auto;
-  border-color:#DCE6F2!important;
-  box-shadow:0 18px 45px rgba(15,23,42,.18)!important;
-}
-.quick-copy,
-.account-card,
-.info-card{
-  position:relative;
-  z-index:1;
-}
-.menu-action{
-  color:#334155;
-  font-weight:750;
-}
-.menu-action:hover{
-  background:#F1F7FF;
-  color:#2563EB;
-}
-.danger-action{
-  color:#DC2626!important;
-}
-.danger-action:hover{
-  background:#FEF2F2!important;
-}
-
-.excel-modal{
-  width:min(100%,620px);
-}
-.excel-modal h3{
-  font-weight:900;
-}
-.excel-modal-desc b,
-.excel-modal-note b{
-  color:#0F172A;
-}
-.excel-modal-summary{
-  grid-template-columns:repeat(5,minmax(0,1fr))!important;
-}
-.excel-modal-summary div{
-  background:#FFFFFF;
-}
-.excel-modal-summary strong{
-  color:#1D4ED8;
-  font-weight:950;
-}
-.excel-modal-summary span{
-  color:#475569;
-  font-weight:850;
-}
-.excel-modal-note{
-  margin:0 0 14px;
-  padding:12px 14px;
-  border:1px solid #DBEAFE;
-  border-radius:16px;
-  background:#EFF6FF;
-  color:#31507A;
-  font-size:13px;
-  font-weight:650;
-  line-height:1.55;
-}
-.excel-modal-actions{
-  grid-template-columns:1fr 1fr!important;
-  align-items:stretch;
-}
-.excel-modal-actions .btn{
-  min-height:44px;
-  border-radius:15px;
-  font-weight:900;
-}
-.modal-cancel{
-  background:#FFFFFF!important;
-  color:#64748B!important;
-  border:1px solid #E2E8F0!important;
-  box-shadow:none!important;
-}
-.modal-merge{
-  background:#EFF6FF!important;
-  color:#1D4ED8!important;
-  border:1px solid #BFDBFE!important;
-}
-.sync-caution{
-  background:#FFF7ED!important;
-  color:#9A3412!important;
-  border:1px solid #FED7AA!important;
-  box-shadow:none!important;
-}
-.duplicate-add{
-  background:#FFFFFF!important;
-  color:#9A3412!important;
-  border:1px dashed #FDBA74!important;
-  box-shadow:none!important;
-}
-.excel-modal-warn{
-  border:1px solid #FED7AA;
-}
-
-.quick-grid{
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr))!important;
-}
-.quick-item{
-  display:grid!important;
-  grid-template-columns:minmax(92px,1fr) auto auto;
-  grid-template-areas:"site actions star";
-  align-items:center;
-  gap:10px;
-  min-height:76px;
-  height:auto!important;
-  padding:13px 14px 13px 18px!important;
-}
-.quick-item::before{
-  top:14px;
-  bottom:14px;
-}
-.quick-item .site-label{
-  grid-area:site;
-  order:0!important;
-  min-width:0;
-  padding-left:2px;
-}
-.quick-item .site-label > div{
-  max-width:none!important;
-}
-.quick-item strong{
-  font-size:14.5px;
-  font-weight:900!important;
-  letter-spacing:-.04em;
-}
-.quick-actions{
-  grid-area:actions;
-  order:0!important;
-  gap:7px!important;
-}
-.quick-item .copy-btn{
-  min-width:42px;
-  height:34px;
-  padding:0 11px;
-  border-radius:12px;
-}
-.quick-star{
-  grid-area:star;
-  order:0!important;
-  width:26px;
-  height:26px;
-  min-width:26px;
-  min-height:26px;
-  border-radius:10px;
-  background:#FFFBEB!important;
-  color:#F59E0B!important;
-}
-
-.info-card{
-  border-color:#E2E8F0!important;
-  background:#FFFFFF!important;
-  box-shadow:0 10px 28px rgba(15,23,42,.045)!important;
-}
-.info-card h2{
-  color:#111827!important;
-  font-weight:900!important;
-}
-.info-sub{
-  color:#64748B!important;
-  font-weight:800!important;
-}
-.info-grid{
-  display:grid;
-  gap:8px;
-}
-.info-grid.school-grid{
-  column-gap:18px!important;
-  row-gap:8px!important;
-}
-.school-column{
-  gap:8px;
-}
-.school-extra{
-  gap:8px;
-  border-top:0!important;
-  margin-top:0!important;
-  padding-top:0!important;
-}
-.info-card .info-row,
-.info-card .info-row.selecting{
-  min-height:44px;
-  padding:7px 9px 7px 12px!important;
-  border:1px solid #E2E8F0!important;
-  border-radius:14px;
-  background:#F8FAFC;
-  grid-template-columns:minmax(120px,36%) minmax(0,1fr)!important;
-  gap:10px!important;
-}
-.info-card .info-row:hover{
-  background:#FFFFFF;
-  border-color:#BFDBFE!important;
-  box-shadow:0 0 0 3px rgba(59,130,246,.07);
-}
-.info-card .label-input{
-  padding:0 2px!important;
-  color:#111827!important;
-  font-size:13.5px!important;
-  font-weight:900!important;
-  letter-spacing:-.035em;
-}
-.info-card .inline-input{
-  padding:0 2px!important;
-  color:#334155!important;
-  font-size:13.5px!important;
-  font-weight:700!important;
-}
-.info-card .info-copy-cell{
-  grid-template-columns:minmax(0,1fr) 34px!important;
-  gap:7px!important;
-}
-.info-card .copy-pill.copy-icon-only{
-  width:32px;
-  height:32px;
-  border-radius:11px;
-  border:1px solid #BFDBFE!important;
-  background:#EFF6FF!important;
-  color:#2563EB!important;
-}
-.info-card .copy-pill.copy-icon-only svg{
-  width:15px;
-  height:15px;
-}
-.info-card .copy-pill.copy-icon-only:hover{
-  background:#DBEAFE!important;
-}
-
-@media (max-width:720px){
-  .excel-modal-summary{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-  .excel-modal-actions{
-    grid-template-columns:1fr!important;
-  }
-  .data-menu-panel{
-    position:static!important;
-    width:100%!important;
-    max-height:none;
-    box-shadow:none!important;
-  }
-  .quick-grid{
-    grid-template-columns:1fr!important;
-  }
-  .quick-item{
-    grid-template-columns:minmax(0,1fr) auto auto;
-  }
-  .info-card .info-row,
-  .info-card .info-row.selecting{
-    grid-template-columns:minmax(92px,34%) minmax(0,1fr)!important;
-  }
-}
-
-/* ============================================================
-   v3.1.5 excel sync hierarchy + info value contrast
-   - 2번째 이후 업로드 흐름에 맞춰 '엑셀 기준으로 동기화'를 메인 버튼으로 격상
-   - 삭제/동기화 안내는 주의하되 무섭지 않게 표시
-   - 학교/은행/결제 정보행은 라벨보다 값이 더 또렷하게 보이도록 보정
-   ============================================================ */
-.excel-modal-desc b,
-.excel-modal-note b{
-  color:#1D4ED8!important;
-  font-weight:900!important;
-}
-.excel-modal-note{
-  background:#F1F7FF!important;
-  border-color:#BFDBFE!important;
-  color:#27476E!important;
-}
-.excel-modal-sync-warning,
-.excel-modal-sync-safe{
-  margin:0 0 14px;
-  padding:11px 13px;
-  border-radius:15px;
-  font-size:13px;
-  font-weight:750;
-  line-height:1.5;
-}
-.excel-modal-sync-warning{
-  background:#FFF7ED;
-  border:1px solid #FDBA74;
-  color:#9A3412;
-}
-.excel-modal-sync-warning b{
-  font-weight:950;
-}
-.excel-modal-sync-safe{
-  background:#ECFDF5;
-  border:1px solid #A7F3D0;
-  color:#047857;
-}
-.excel-modal-actions{
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:10px!important;
-}
-.excel-modal-actions .sync-main{
-  grid-column:1 / -1;
-  min-height:50px;
-  background:#2563EB!important;
-  color:#FFFFFF!important;
-  border:1px solid #2563EB!important;
-  box-shadow:0 12px 24px rgba(37,99,235,.20)!important;
-}
-.excel-modal-actions .sync-main:hover{
-  background:#1D4ED8!important;
-  border-color:#1D4ED8!important;
-}
-.excel-modal-actions .modal-merge{
-  background:#EFF6FF!important;
-  color:#1D4ED8!important;
-  border:1px solid #BFDBFE!important;
-  box-shadow:none!important;
-}
-.excel-modal-actions .modal-add-only{
-  background:#FFFFFF!important;
-  color:#334155!important;
-  border:1px solid #CBD5E1!important;
-  box-shadow:none!important;
-}
-.excel-modal-actions .duplicate-add{
-  grid-column:1 / -1;
-  background:#FFF7ED!important;
-  color:#C2410C!important;
-  border:1px dashed #FDBA74!important;
-  box-shadow:none!important;
-}
-.excel-modal-actions .modal-cancel{
-  grid-column:1 / -1;
-  background:#FFFFFF!important;
-  color:#64748B!important;
-  border:1px solid #E2E8F0!important;
-  box-shadow:none!important;
-}
-.excel-modal-warn{
-  background:#FFFBEB!important;
-  border-color:#FED7AA!important;
-  color:#9A3412!important;
-}
-.info-card .label-input{
-  color:#334155!important;
-  font-weight:800!important;
-}
-.info-card .inline-input{
-  color:#0F172A!important;
-  font-weight:850!important;
-}
-.info-card .info-row:hover .inline-input{
-  color:#111827!important;
-}
-
-@media (max-width:720px){
-  .excel-modal-actions .sync-main,
-  .excel-modal-actions .duplicate-add,
-  .excel-modal-actions .modal-cancel{
-    grid-column:auto;
-  }
-}
-
-/* ============================================================
-   v3.1.6 easier sync labels + info row readability tune
-   - '엑셀처럼 맞추기' / '삭제 없이 반영'처럼 결과 차이가 바로 보이는 버튼명 적용
-   - 학교/은행/결제 정보행은 현재 레이아웃을 유지하되 라벨은 차분하게, 값은 더 또렷하게 정리
-   ============================================================ */
-.excel-modal-actions .sync-main::after{
-  content:"추가 · 수정 · 삭제";
-  display:block;
-  margin-top:3px;
-  font-size:11px;
-  font-weight:800;
-  opacity:.86;
-}
-.excel-modal-actions .modal-merge::after{
-  content:"추가 · 수정만";
-  display:block;
-  margin-top:3px;
-  font-size:11px;
-  font-weight:850;
-  color:#3B82F6;
-}
-.excel-modal-actions .modal-add-only::after{
-  content:"처음 업로드용";
-  display:block;
-  margin-top:3px;
-  font-size:11px;
-  font-weight:800;
-  color:#64748B;
-}
-.info-card .info-row{
-  grid-template-columns:minmax(120px,30%) minmax(0,1fr)!important;
-}
-.info-card .label-input{
-  color:#1E293B!important;
-  font-weight:760!important;
-  letter-spacing:-.25px!important;
-}
-.info-card .inline-input{
-  color:#0B1220!important;
-  font-weight:900!important;
-  letter-spacing:-.2px!important;
-}
-.info-card .copy-pill.copy-icon-only{
-  flex:0 0 auto;
-}
-@media (max-width:640px){
-  .info-card .info-row,
-  .info-card .info-row.selecting{
-    grid-template-columns:1fr auto!important;
-    gap:6px 8px!important;
-    align-items:center!important;
-  }
-  .info-card .label-input{
-    grid-column:1 / -1!important;
-    color:#64748B!important;
-    font-size:12px!important;
-    font-weight:850!important;
-  }
-  .info-card .copy-cell{
-    grid-column:1 / -1!important;
-  }
-  .info-card .inline-input{
-    font-size:14px!important;
-  }
-}
-
-/* ============================================================
-   v3.1.7 info list rows refinement
-   - 학교정보/은행계좌/결제수단은 개별 카드 느낌을 줄이고 섹션 안 정보행 목록으로 정리
-   - 라벨은 차분하게, 값은 더 또렷하게, 복사 버튼은 오른쪽 고정
-   - 사이트 계정 카드는 기존 카드형 유지
-   ============================================================ */
-.info-card{
-  padding:22px!important;
-}
-.info-card .info-grid{
-  gap:0!important;
-  border:1px solid #E2E8F0;
-  border-radius:18px;
-  background:#FFFFFF;
-  overflow:hidden;
-}
-.info-card .info-grid.school-grid{
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:0!important;
-  border:0;
-  border-radius:0;
-  background:transparent;
-  overflow:visible;
-}
-.info-card .school-column,
-.info-card .school-extra{
-  display:grid;
-  gap:0!important;
-  border:1px solid #E2E8F0;
-  border-radius:18px;
-  background:#FFFFFF;
-  overflow:hidden;
-}
-.info-card .school-column-left{
-  margin-right:9px;
-}
-.info-card .school-column-right{
-  margin-left:9px;
-}
-.info-card .school-extra{
-  grid-column:1 / -1;
-  margin-top:12px!important;
-}
-.info-card .info-row,
-.info-card .info-row.selecting{
-  min-height:46px;
-  padding:6px 10px 6px 14px!important;
-  border:0!important;
-  border-bottom:1px solid #E8EEF5!important;
-  border-radius:0!important;
-  background:#FFFFFF!important;
-  box-shadow:none!important;
-  grid-template-columns:minmax(116px,30%) minmax(0,1fr)!important;
-  gap:12px!important;
-}
-.info-card .info-row:last-child,
-.info-card .school-column .info-row:last-child,
-.info-card .school-extra .info-row:last-child{
-  border-bottom:0!important;
-}
-.info-card .info-row:hover{
-  background:#F8FAFC!important;
-  border-color:#E8EEF5!important;
-  box-shadow:inset 3px 0 0 #BFDBFE!important;
-}
-.info-card .label-input{
-  padding:0!important;
-  color:#334155!important;
-  font-size:13.5px!important;
-  font-weight:820!important;
-  letter-spacing:-.32px!important;
-  background:transparent!important;
-}
-.info-card .inline-input{
-  padding:0!important;
-  color:#0F172A!important;
-  font-size:13.8px!important;
-  font-weight:900!important;
-  letter-spacing:-.28px!important;
-  background:transparent!important;
-}
-.info-card .label-input:hover,
-.info-card .label-input:focus,
-.info-card .inline-input:hover,
-.info-card .inline-input:focus{
-  background:#FFFFFF!important;
-  box-shadow:0 0 0 2px rgba(59,130,246,.12)!important;
-  border-radius:8px!important;
-}
-.info-card .info-copy-cell{
-  grid-template-columns:minmax(0,1fr) 32px!important;
-  gap:8px!important;
-}
-.info-card .copy-pill.copy-icon-only{
-  width:30px!important;
-  height:30px!important;
-  border-radius:10px!important;
-  border:1px solid #BFDBFE!important;
-  background:#EFF6FF!important;
-  color:#2563EB!important;
-}
-.info-card .copy-pill.copy-icon-only:hover{
-  background:#DBEAFE!important;
-  border-color:#93C5FD!important;
-}
-.info-bank .info-grid,
-.info-pay .info-grid{
-  border-radius:18px;
-}
-.info-card.delete-mode .info-row,
-.info-card.delete-mode .info-row.selecting{
-  grid-template-columns:28px minmax(108px,30%) minmax(0,1fr)!important;
-}
-
-@media (max-width:900px){
-  .info-card .info-grid.school-grid{
-    grid-template-columns:1fr!important;
-  }
-  .info-card .school-column-left,
-  .info-card .school-column-right{
-    margin:0!important;
-  }
-  .info-card .school-column-right{
-    border-top:0;
-    border-top-left-radius:0;
-    border-top-right-radius:0;
-  }
-  .info-card .school-column-left{
-    border-bottom-left-radius:0;
-    border-bottom-right-radius:0;
-  }
-}
-
-@media (max-width:640px){
-  .info-card{
-    padding:18px!important;
-  }
-  .info-card .info-row,
-  .info-card .info-row.selecting{
-    grid-template-columns:1fr auto!important;
-    min-height:54px;
-    padding:10px 10px 10px 12px!important;
-    gap:4px 8px!important;
-  }
-  .info-card .label-input{
-    grid-column:1 / 2!important;
-    color:#64748B!important;
-    font-size:12px!important;
-    font-weight:850!important;
-  }
-  .info-card .copy-cell{
-    grid-column:1 / -1!important;
-  }
-  .info-card .inline-input{
-    font-size:14px!important;
-  }
-  .info-card .info-copy-cell{
-    grid-template-columns:minmax(0,1fr) 32px!important;
-  }
-  .info-card.delete-mode .info-row,
-  .info-card.delete-mode .info-row.selecting{
-    grid-template-columns:28px 1fr!important;
-  }
-  .info-card.delete-mode .label-input,
-  .info-card.delete-mode .copy-cell{
-    grid-column:2 / -1!important;
-  }
-}
-
-
-/* ============================================================
-   v3.1.8 info row visual hierarchy refinement
-   - 학교정보/은행계좌/결제수단은 카드 낱개가 아닌 섹션 안 목록처럼 보이게 조정
-   - 라벨은 차분하게, 값은 더 또렷하게, 복사 버튼은 오른쪽 고정
-   - 학교정보는 한 줄 정보행 목록으로 넓게 보여 값 가독성 확보
-   ============================================================ */
-.info-layout{
-  gap:18px!important;
-}
-
-.info-card{
-  padding:22px 20px!important;
-  border:1px solid #DDE7F3!important;
-  border-radius:24px!important;
-  background:#FFFFFF!important;
-  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
-}
-
-.info-school,
-.info-bank,
-.info-pay{
-  background:#FFFFFF!important;
-  border-color:#DDE7F3!important;
-}
-
-.info-card-head{
-  align-items:center!important;
-  margin-bottom:16px!important;
-}
-
-.info-card h2{
-  font-size:23px!important;
-  font-weight:850!important;
-  letter-spacing:-.7px!important;
-  color:#0F172A!important;
-}
-
-.info-sub{
-  font-size:12px!important;
-  font-weight:750!important;
-  color:#64748B!important;
-}
-
-.info-card .info-grid,
-.info-card .info-grid.school-grid{
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:0!important;
-  border:1px solid #E1E9F2!important;
-  border-radius:18px!important;
-  background:#FFFFFF!important;
-  overflow:hidden!important;
-}
-
-.info-card .school-column,
-.info-card .school-extra{
-  display:contents!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  overflow:visible!important;
-  margin:0!important;
-}
-
-.info-card .info-row,
-.info-card .info-row.selecting{
-  display:grid!important;
-  grid-template-columns:minmax(130px,26%) minmax(0,1fr)!important;
-  align-items:center!important;
-  gap:14px!important;
-  min-height:52px!important;
-  padding:11px 10px 11px 16px!important;
-  border:0!important;
-  border-bottom:1px solid #E7EEF6!important;
-  border-radius:0!important;
-  background:#FFFFFF!important;
-  box-shadow:none!important;
-}
-
-.info-card .info-row:nth-child(even){
-  background:#FAFCFF!important;
-}
-
-.info-card .info-row:last-child{
-  border-bottom:0!important;
-}
-
-.info-card .info-row:hover{
-  background:#F8FAFC!important;
-  box-shadow:inset 3px 0 0 #BFDBFE!important;
-}
-
-.info-card .label-input{
-  min-width:0!important;
-  padding:0!important;
-  border:0!important;
-  outline:0!important;
-  background:transparent!important;
-  color:#475569!important;
-  font-size:13px!important;
-  font-weight:720!important;
-  letter-spacing:-.25px!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-
-.info-card .inline-input{
-  min-width:0!important;
-  padding:0!important;
-  border:0!important;
-  outline:0!important;
-  background:transparent!important;
-  color:#0F172A!important;
-  font-size:14px!important;
-  font-weight:850!important;
-  letter-spacing:-.2px!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-
-.info-card .label-input:hover,
-.info-card .label-input:focus,
-.info-card .inline-input:hover,
-.info-card .inline-input:focus{
-  background:#FFFFFF!important;
-  box-shadow:0 0 0 2px rgba(37,99,235,.10)!important;
-  border-radius:8px!important;
-}
-
-.info-card .copy-cell,
-.info-card .info-copy-cell{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 36px!important;
-  align-items:center!important;
-  gap:10px!important;
-  min-width:0!important;
-}
-
-.info-card .copy-pill.copy-icon-only{
-  width:36px!important;
-  height:36px!important;
-  border:1px solid #BFDBFE!important;
-  border-radius:12px!important;
-  background:#EFF6FF!important;
-  color:#2563EB!important;
-  display:grid!important;
-  place-items:center!important;
-}
-
-.info-card .copy-pill.copy-icon-only svg{
-  width:16px!important;
-  height:16px!important;
-}
-
-.info-card .copy-pill.copy-icon-only:hover{
-  background:#DBEAFE!important;
-  border-color:#93C5FD!important;
-}
-
-.info-card.delete-mode .info-row,
-.info-card.delete-mode .info-row.selecting{
-  grid-template-columns:28px minmax(130px,26%) minmax(0,1fr)!important;
-}
-
-@media (max-width:760px){
-  .info-card{
-    padding:18px 14px!important;
-    border-radius:20px!important;
-  }
-
-  .info-card-head{
-    align-items:flex-start!important;
-  }
-
-  .info-card h2{
-    font-size:21px!important;
-  }
-
-  .info-card .info-row,
-  .info-card .info-row.selecting{
-    grid-template-columns:1fr!important;
-    gap:4px!important;
-    min-height:62px!important;
-    padding:11px 10px 11px 14px!important;
-  }
-
-  .info-card .label-input{
-    grid-column:1 / -1!important;
-    color:#64748B!important;
-    font-size:12px!important;
-    font-weight:800!important;
-  }
-
-  .info-card .copy-cell,
-  .info-card .info-copy-cell{
-    grid-column:1 / -1!important;
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) 36px!important;
-    align-items:center!important;
-    gap:10px!important;
-  }
-
-  .info-card .inline-input{
-    font-size:14px!important;
-  }
-
-  .info-card.delete-mode .info-row,
-  .info-card.delete-mode .info-row.selecting{
-    grid-template-columns:28px 1fr!important;
-  }
-
-  .info-card.delete-mode .select-cell{
-    grid-column:1 / 2!important;
-    grid-row:1 / span 2!important;
-  }
-
-  .info-card.delete-mode .label-input,
-  .info-card.delete-mode .copy-cell,
-  .info-card.delete-mode .info-copy-cell{
-    grid-column:2 / -1!important;
-  }
-}
-
-
-/* v3.1.9: 상단 바로가기 이동감 완화(유지) */
-@media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto!important;}
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
-}
-
-/* v3.1.15: 파일명/섹션 이동/브라우저 저장 라벨 UX 마감 보정 */
-.section-arrived{
-  animation:keyboxSectionArrive 1.12s ease-out 1;
-}
-@keyframes keyboxSectionArrive{
-  0%{
-    outline:3px solid rgba(37,99,235,.34);
-    box-shadow:0 0 0 8px rgba(37,99,235,.10), var(--shadow);
-  }
-  100%{
-    outline:3px solid rgba(37,99,235,0);
-    box-shadow:var(--shadow);
-  }
-}
-.search-panel.section-arrived{
-  animation:keyboxSearchArrive 1.12s ease-out 1;
-}
-@keyframes keyboxSearchArrive{
-  0%{
-    outline:3px solid rgba(37,99,235,.30);
-    box-shadow:0 0 0 8px rgba(37,99,235,.10), 0 14px 30px rgba(15,23,42,.06);
-  }
-  100%{
-    outline:3px solid rgba(37,99,235,0);
-    box-shadow:0 14px 30px rgba(15,23,42,.06);
-  }
-}
-.quick-empty-state{
-  display:grid;
-  gap:6px;
-  align-items:center;
-  justify-items:center;
-  padding:20px 16px!important;
-  color:#64748B!important;
-  background:#F8FAFC!important;
-  border-color:#D8E4F0!important;
-}
-.quick-empty-state strong{
-  color:#334155;
-  font-size:14px;
-  font-weight:850;
-}
-.quick-empty-state span{
-  color:#64748B;
-  font-size:13px;
-  font-weight:650;
-}
-@media (prefers-reduced-motion: reduce){
-  .section-arrived,
-  .search-panel.section-arrived{animation:none!important;}
-}
-
-
-
-/* v3.1.15: 사이트 계정과 정보 섹션 톤앤매너 통일 */
-.info-card{
-  position:relative!important;
-  overflow:hidden!important;
-  background:#FFFFFF!important;
-  border:1px solid #DCE6F2!important;
-  box-shadow:0 8px 22px rgba(15,23,42,.045)!important;
-}
-.info-card::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:18px;
-  bottom:18px;
-  width:4px;
-  border-radius:999px;
-  background:#60A5FA;
-}
-.info-card.info-bank::before{background:#8B5CF6;}
-.info-card.info-pay::before{background:#38BDF8;}
-.info-card-head{
-  padding-left:6px!important;
-}
-.info-card h2{
-  color:#0F172A!important;
-  font-size:22px!important;
-  font-weight:850!important;
-  letter-spacing:-.65px!important;
-}
-.info-card .info-sub{
-  color:#64748B!important;
-  font-size:12px!important;
-  font-weight:750!important;
-}
-.info-card .info-grid{
-  margin-left:6px!important;
-  border:1px solid #E1E9F2!important;
-  background:#FFFFFF!important;
-  border-radius:18px!important;
-  overflow:hidden!important;
-}
-.info-card .info-row,
-.info-card .info-row.selecting{
-  background:#FFFFFF!important;
-  border-bottom:1px solid #E7EEF6!important;
-}
-.info-card .info-row:nth-child(even){
-  background:#FAFCFF!important;
-}
-.info-card .info-row:hover{
-  background:#F8FAFC!important;
-  box-shadow:inset 3px 0 0 rgba(96,165,250,.52)!important;
-}
-.info-card .label-input{
-  color:#475569!important;
-  font-weight:720!important;
-}
-.info-card .inline-input{
-  color:#10233F!important;
-  font-weight:820!important;
-}
-.info-card .copy-pill.copy-icon-only{
-  background:#EFF6FF!important;
-  color:#2563EB!important;
-  border-color:#BFDBFE!important;
-}
-.info-card .copy-pill.copy-icon-only:hover{
-  background:#DBEAFE!important;
-  border-color:#93C5FD!important;
-}
-.excel-modal-note span{
-  display:inline-block;
-  margin-top:4px;
-  color:#475569;
-  font-size:13px;
-  font-weight:700;
-}
-@media (max-width:760px){
-  .info-card::before{
-    top:16px;
-    bottom:16px;
-  }
-  .info-card-head,
-  .info-card .info-grid{
-    margin-left:4px!important;
-  }
-}
-
-
-/* ============================================================
-   v3.1.15 info section polish
-   - 학교정보/은행계좌/결제수단의 왼쪽 포인트라인 제거
-   - 사이트 계정 카드와 톤은 맞추되, 정보 섹션은 조용한 목록형으로 유지
-   ============================================================ */
-.info-card{
-  overflow:visible!important;
-  border-color:#E2EAF4!important;
-  box-shadow:0 10px 24px rgba(15,23,42,.04)!important;
-}
-.info-card::before,
-.info-card.info-bank::before,
-.info-card.info-pay::before{
-  content:none!important;
-  display:none!important;
-}
-.info-card-head{
-  padding-left:0!important;
-  padding-bottom:13px!important;
-  margin-bottom:14px!important;
-  border-bottom:1px solid #EEF3F8!important;
-}
-.info-card h2{
-  color:#0F172A!important;
-}
-.info-card .info-sub{
-  color:#64748B!important;
-}
-.info-card .info-grid,
-.info-card .info-grid.school-grid{
-  margin-left:0!important;
-  border-color:#E3EBF5!important;
-  border-radius:18px!important;
-  background:#FFFFFF!important;
-}
-.info-card .info-row,
-.info-card .info-row.selecting{
-  border-bottom-color:#E8EEF6!important;
-}
-.info-card .info-row:nth-child(even){
-  background:#FBFDFF!important;
-}
-.info-card .info-row:hover{
-  background:#F8FAFC!important;
-  box-shadow:none!important;
-}
-.info-card .label-input{
-  color:#4B5F77!important;
-  font-weight:700!important;
-}
-.info-card .inline-input{
-  color:#10233F!important;
-  font-weight:820!important;
-}
-@media (max-width:760px){
-  .info-card-head,
-  .info-card .info-grid,
-  .info-card .info-grid.school-grid{
-    margin-left:0!important;
-  }
-  .info-card-head{
-    padding-bottom:12px!important;
-  }
-}
-
-/* ============================================================
-   v3.1.15 upload diagnostics + typography stabilization
-   - 포인트라인 없이 글씨 두께/컬러만 차분하게 통일
-   - 업로드 모달에서 읽은 행/제외된 행을 확인할 수 있게 표시
+   v3.1.16 CSS cleanup
+   - 누적된 버전별 덮어쓰기 정리
+   - 최종 디자인은 유지하고, 타이포·버튼·정보행 규칙을 한곳에 통합
    ============================================================ */
 :root{
   --keybox-page-bg:#F4F7FB;
@@ -5364,13 +4211,39 @@ td{
   --keybox-blue:#2563EB;
   --keybox-blue-soft:#F6F9FF;
   --keybox-blue-line:#D8E7FF;
+  --keybox-warn-bg:#FFF7ED;
+  --keybox-warn-line:#FED7AA;
+  --keybox-warn-text:#9A3412;
 }
+
 body{
   color:var(--keybox-text-main)!important;
   background:var(--keybox-page-bg)!important;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
+
+/* 상단 섹션 이동감 */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto!important;}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+.section-arrived{animation:keyboxSectionArrive 1.12s ease-out 1;}
+@keyframes keyboxSectionArrive{
+  0%{outline:3px solid rgba(37,99,235,.34);box-shadow:0 0 0 8px rgba(37,99,235,.10), var(--shadow);}
+  100%{outline:3px solid rgba(37,99,235,0);box-shadow:var(--shadow);}
+}
+.search-panel.section-arrived{animation:keyboxSearchArrive 1.12s ease-out 1;}
+@keyframes keyboxSearchArrive{
+  0%{outline:3px solid rgba(37,99,235,.30);box-shadow:0 0 0 8px rgba(37,99,235,.10), 0 14px 30px rgba(15,23,42,.06);}
+  100%{outline:3px solid rgba(37,99,235,0);box-shadow:0 14px 30px rgba(15,23,42,.06);}
+}
+@media (prefers-reduced-motion: reduce){
+  .section-arrived,
+  .search-panel.section-arrived{animation:none!important;}
+}
+
+/* 공통 표면과 제목 타이포 */
 .toolbar,
 .quick-copy,
 .account-card,
@@ -5399,70 +4272,12 @@ body{
   color:var(--keybox-text-muted)!important;
   font-weight:500!important;
 }
-.account-row-card .site-input,
-.quick-item strong{
-  color:var(--keybox-text-title)!important;
-  font-weight:780!important;
-  letter-spacing:-.45px!important;
-}
-.account-row-card .site-sub,
-.account-row-card .memo-sub,
+.small-btn,
 .open-url-btn{
-  color:var(--keybox-text-muted)!important;
-  font-weight:500!important;
-}
-.credential-label,
-.info-card .label-input,
-.info-row label,
-.info-label,
-th{
-  color:var(--keybox-text-muted)!important;
-  font-weight:620!important;
-  letter-spacing:-.2px!important;
-}
-.credential-input,
-.info-card .inline-input,
-.account-copy-cell .table-input,
-.inline-input,
-.table-input{
-  color:var(--keybox-text-main)!important;
   font-weight:680!important;
-  letter-spacing:-.15px!important;
 }
-.account-row-card .credential-row{
-  background:#F9FBFE!important;
-  border-color:var(--keybox-line-soft)!important;
-}
-.info-card{
-  background:var(--keybox-surface)!important;
-  border-color:var(--keybox-line)!important;
-  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
-}
-.info-card::before,
-.info-card.info-bank::before,
-.info-card.info-pay::before{
-  content:none!important;
-  display:none!important;
-}
-.info-card .info-grid,
-.info-card .info-grid.school-grid{
-  border-color:var(--keybox-line)!important;
-  background:var(--keybox-surface)!important;
-}
-.info-card .info-row,
-.info-card .info-row.selecting{
-  background:var(--keybox-surface)!important;
-  border-color:var(--keybox-line-soft)!important;
-  box-shadow:none!important;
-}
-.info-card .info-row:nth-child(even){
-  background:var(--keybox-surface-soft)!important;
-}
-.info-card .info-row:hover{
-  background:#F8FAFC!important;
-  border-color:var(--keybox-line-soft)!important;
-  box-shadow:none!important;
-}
+
+/* 복사 버튼 톤 */
 .copy-chip,
 .copy-btn,
 .copy-pill,
@@ -5481,10 +4296,6 @@ th{
   border-color:#BFDBFE!important;
   color:var(--keybox-blue)!important;
 }
-.small-btn,
-.open-url-btn{
-  font-weight:680!important;
-}
 .table-input::placeholder,
 .inline-input::placeholder,
 .label-input::placeholder,
@@ -5493,6 +4304,337 @@ th{
   color:#A8B2C0!important;
   font-weight:400!important;
 }
+
+/* 빠른복사 */
+.quick-copy{
+  border-color:var(--keybox-line)!important;
+  background:#FFFFFF!important;
+  box-shadow:0 12px 30px rgba(15,23,42,.05)!important;
+}
+.quick-grid{align-items:stretch;}
+.quick-item{
+  position:relative;
+  border-color:#DCE6F2!important;
+  background:#FFFFFF!important;
+  box-shadow:0 8px 20px rgba(15,23,42,.035)!important;
+}
+.quick-item::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:12px;
+  bottom:12px;
+  width:3px;
+  border-radius:999px;
+  background:#3B82F6;
+}
+.quick-item:hover{
+  border-color:#CFE1F6!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.055)!important;
+}
+.quick-item .site-badge{display:none!important;}
+.quick-item .quick-site-label,
+.quick-item .site-label{gap:0;padding-left:2px;}
+.quick-item strong{
+  color:var(--keybox-text-title)!important;
+  font-weight:780!important;
+  letter-spacing:-.45px!important;
+}
+.quick-empty-state{
+  display:grid;
+  gap:6px;
+  align-items:center;
+  justify-items:center;
+  padding:20px 16px!important;
+  color:var(--keybox-text-muted)!important;
+  background:#F8FAFC!important;
+  border-color:#D8E4F0!important;
+}
+.quick-empty-state strong{
+  color:#334155!important;
+  font-size:14px;
+  font-weight:760;
+}
+.quick-empty-state span{
+  color:var(--keybox-text-muted)!important;
+  font-size:13px;
+  font-weight:560;
+}
+
+/* 사이트 계정 카드 */
+#siteSection .account-kind-chip,
+#siteSection .account-drag,
+#siteSection .site-badge{
+  display:none!important;
+}
+#siteSection .account-row-card{
+  cursor:default;
+  position:relative;
+  background:#FFFFFF!important;
+  border:1px solid #DCE6F2!important;
+  border-radius:20px!important;
+  box-shadow:0 8px 20px rgba(15,23,42,.04)!important;
+  overflow:hidden;
+}
+#siteSection .account-row-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:14px;
+  bottom:14px;
+  width:4px;
+  border-radius:999px;
+  background:#3B82F6;
+}
+#siteSection .account-row-card:hover{
+  border-color:#CFE1F6!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.055)!important;
+}
+#siteSection .account-site-label .site-label,
+#siteSection .account-site-label{
+  gap:0!important;
+}
+#siteSection .account-row-card .site-input,
+.account-row-card .site-input,
+.quick-item strong{
+  color:var(--keybox-text-title)!important;
+  font-weight:780!important;
+  letter-spacing:-.45px!important;
+}
+#siteSection .account-row-card .site-sub,
+#siteSection .account-row-card .memo-sub,
+.account-row-card .memo-sub,
+.open-url-btn{
+  color:var(--keybox-text-muted)!important;
+  font-weight:500!important;
+}
+#siteSection .credential-row,
+.account-row-card .credential-row{
+  background:#F9FBFE!important;
+  border-color:var(--keybox-line-soft)!important;
+}
+.credential-label,
+.account-row-card .credential-label{
+  font-size:13px!important;
+  font-weight:660!important;
+  color:#5F6F86!important;
+  letter-spacing:-.2px!important;
+}
+.credential-input,
+.account-row-card .credential-input{
+  font-size:14.5px!important;
+  font-weight:700!important;
+  color:#243247!important;
+  letter-spacing:-.15px!important;
+}
+
+/* 학교정보·은행계좌·결제수단 */
+.info-card{
+  overflow:visible!important;
+  background:var(--keybox-surface)!important;
+  border-color:var(--keybox-line)!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.045)!important;
+}
+.info-card::before,
+.info-card.info-bank::before,
+.info-card.info-pay::before{
+  content:none!important;
+  display:none!important;
+}
+.info-card-head{
+  padding-left:0!important;
+  padding-bottom:13px!important;
+  margin-bottom:14px!important;
+  border-bottom:1px solid var(--keybox-line-soft)!important;
+}
+.info-card h2{
+  color:var(--keybox-text-title)!important;
+  font-size:22px!important;
+  font-weight:780!important;
+  letter-spacing:-.6px!important;
+}
+.info-card .info-sub{
+  color:var(--keybox-text-muted)!important;
+  font-size:12px!important;
+  font-weight:500!important;
+}
+.info-card .info-grid,
+.info-card .info-grid.school-grid{
+  margin-left:0!important;
+  border:1px solid var(--keybox-line)!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:var(--keybox-surface)!important;
+}
+.info-card .info-row,
+.info-card .info-row.selecting{
+  min-height:52px!important;
+  padding:10px 10px 10px 16px!important;
+  background:var(--keybox-surface)!important;
+  border:0!important;
+  border-bottom:1px solid var(--keybox-line-soft)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.info-card .info-row:nth-child(even){background:var(--keybox-surface-soft)!important;}
+.info-card .info-row:hover{background:#F8FAFC!important;box-shadow:none!important;}
+.info-card .info-row:last-child,
+.info-card .school-column .info-row:last-child,
+.info-card .school-extra .info-row:last-child{border-bottom:0!important;}
+.info-card .info-row label,
+.info-card .info-label,
+.info-card .label-input{
+  font-size:13.5px!important;
+  font-weight:680!important;
+  color:#44546A!important;
+  letter-spacing:-.22px!important;
+}
+.info-card .inline-input,
+.info-card .info-value,
+.info-card .table-input{
+  font-size:14.5px!important;
+  font-weight:700!important;
+  color:#243247!important;
+  letter-spacing:-.15px!important;
+}
+.info-card .copy-pill.copy-icon-only{
+  width:36px!important;
+  height:36px!important;
+  border-radius:12px!important;
+  display:grid!important;
+  place-items:center!important;
+  transform:none!important;
+}
+.info-card .copy-pill.copy-icon-only svg{
+  width:16px!important;
+  height:16px!important;
+}
+.info-card.delete-mode .info-row,
+.info-card.delete-mode .info-row.selecting{
+  grid-template-columns:28px minmax(130px,26%) minmax(0,1fr)!important;
+}
+
+/* 데이터 관리 드롭다운 */
+.toolbar,
+.toolbar-actions,
+.toolbar-actions-full{
+  overflow:visible!important;
+}
+.data-menu{position:relative;z-index:40;}
+.data-menu[open]{z-index:9999;}
+.data-menu-panel{
+  z-index:10000!important;
+  max-height:min(70vh,420px);
+  overflow:auto;
+}
+
+/* 엑셀 업로드 모달 */
+.excel-modal-desc b,
+.excel-modal-note b{
+  color:#1D4ED8!important;
+  font-weight:800!important;
+}
+.excel-modal-note{
+  background:#F1F7FF!important;
+  border-color:#BFDBFE!important;
+  color:#27476E!important;
+}
+.excel-modal-note span{
+  display:inline-block;
+  margin-top:4px;
+  color:#475569;
+  font-size:13px;
+  font-weight:600;
+}
+.excel-modal-sync-warning,
+.excel-modal-sync-safe{
+  margin:0 0 14px;
+  padding:11px 13px;
+  border-radius:15px;
+  font-size:13px;
+  font-weight:650;
+  line-height:1.5;
+}
+.excel-modal-sync-warning{
+  background:var(--keybox-warn-bg);
+  border:1px solid var(--keybox-warn-line);
+  color:var(--keybox-warn-text);
+}
+.excel-modal-sync-warning b{font-weight:850;}
+.excel-modal-sync-safe{
+  background:#ECFDF5;
+  border:1px solid #A7F3D0;
+  color:#047857;
+}
+.excel-modal-actions{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+.excel-modal-actions .sync-main{
+  grid-column:1 / -1;
+  min-height:50px;
+  background:#2563EB!important;
+  color:#FFFFFF!important;
+  border:1px solid #2563EB!important;
+  box-shadow:0 12px 24px rgba(37,99,235,.18)!important;
+}
+.excel-modal-actions .sync-main::after{
+  content:"추가 · 수정 · 삭제";
+  display:block;
+  margin-top:3px;
+  font-size:11px;
+  font-weight:650;
+  opacity:.88;
+}
+.excel-modal-actions .modal-merge{
+  background:#EFF6FF!important;
+  color:#1D4ED8!important;
+  border:1px solid #BFDBFE!important;
+  box-shadow:none!important;
+}
+.excel-modal-actions .modal-merge::after{
+  content:"추가 · 수정만";
+  display:block;
+  margin-top:3px;
+  font-size:11px;
+  font-weight:650;
+  opacity:.78;
+}
+.excel-modal-actions .modal-add-only{
+  background:#FFFFFF!important;
+  color:#334155!important;
+  border:1px solid #CBD5E1!important;
+  box-shadow:none!important;
+}
+.excel-modal-actions .modal-add-only::after{
+  content:"처음 업로드용";
+  display:block;
+  margin-top:3px;
+  font-size:11px;
+  font-weight:650;
+  color:#64748B;
+}
+.excel-modal-actions .duplicate-add{
+  grid-column:1 / -1;
+  background:#FFF7ED!important;
+  color:#C2410C!important;
+  border:1px dashed #FDBA74!important;
+  box-shadow:none!important;
+}
+.excel-modal-actions .modal-cancel{
+  grid-column:1 / -1;
+  background:#FFFFFF!important;
+  color:#64748B!important;
+  border:1px solid #E2E8F0!important;
+  box-shadow:none!important;
+}
+.excel-modal-warn{
+  background:#FFFBEB!important;
+  border-color:#FED7AA!important;
+  color:#9A3412!important;
+}
+
+/* 엑셀 업로드 진단 */
 .excel-diagnostics{
   display:grid;
   gap:8px;
@@ -5512,24 +4654,20 @@ th{
 }
 .excel-diagnostic-row strong{
   color:var(--keybox-text-title);
-  font-weight:760;
+  font-weight:700;
   white-space:nowrap;
 }
 .excel-diagnostic-row span{
   color:var(--keybox-text-muted);
-  font-weight:560;
+  font-weight:520;
   text-align:right;
 }
 .excel-diagnostic-row.has-warning{
-  background:#FFF7ED;
-  border-color:#FED7AA;
+  background:var(--keybox-warn-bg);
+  border-color:var(--keybox-warn-line);
 }
-.excel-diagnostic-row.has-warning span{
-  color:#9A3412;
-}
-.excel-diagnostic-row.muted{
-  background:#F8FAFC;
-}
+.excel-diagnostic-row.has-warning span{color:var(--keybox-warn-text);}
+.excel-diagnostic-row.muted{background:#F8FAFC;}
 .excel-diagnostics-detail{
   border:1px solid var(--keybox-line-soft);
   border-radius:14px;
@@ -5540,7 +4678,7 @@ th{
   padding:10px 12px;
   color:#475569;
   font-size:13px;
-  font-weight:720;
+  font-weight:680;
   cursor:pointer;
 }
 .excel-diagnostics-detail ul{
@@ -5561,8 +4699,8 @@ th{
   font-size:12.5px;
 }
 .excel-diagnostics-detail li b{
-  color:#9A3412;
-  font-weight:760;
+  color:var(--keybox-warn-text);
+  font-weight:720;
   white-space:nowrap;
 }
 .excel-diagnostics-detail li span{
@@ -5572,83 +4710,51 @@ th{
   white-space:nowrap;
   text-align:right;
 }
-@media (max-width:720px){
-  .excel-diagnostic-row{
-    align-items:flex-start;
-    flex-direction:column;
-    gap:4px;
+
+/* 반응형 */
+@media (max-width:760px){
+  .quick-grid{grid-template-columns:1fr!important;}
+  .quick-item{grid-template-columns:minmax(0,1fr) auto auto;}
+  .info-card{padding:18px 14px!important;border-radius:20px!important;}
+  .info-card-head{align-items:flex-start!important;padding-bottom:12px!important;}
+  .info-card h2{font-size:21px!important;}
+  .info-card .info-row,
+  .info-card .info-row.selecting{
+    grid-template-columns:1fr!important;
+    gap:4px!important;
+    min-height:62px!important;
+    padding:11px 10px 11px 14px!important;
   }
+  .info-card .label-input{grid-column:1 / -1!important;font-size:13px!important;}
+  .info-card .copy-cell,
+  .info-card .info-copy-cell{
+    grid-column:1 / -1!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 36px!important;
+    align-items:center!important;
+    gap:10px!important;
+  }
+  .info-card .inline-input{font-size:14.5px!important;}
+  .info-card.delete-mode .info-row,
+  .info-card.delete-mode .info-row.selecting{grid-template-columns:28px 1fr!important;}
+  .info-card.delete-mode .select-cell{grid-column:1 / 2!important;grid-row:1 / span 2!important;}
+  .info-card.delete-mode .label-input,
+  .info-card.delete-mode .copy-cell,
+  .info-card.delete-mode .info-copy-cell{grid-column:2 / -1!important;}
+  .excel-modal-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .excel-modal-actions{grid-template-columns:1fr!important;}
+  .excel-modal-actions .sync-main,
+  .excel-modal-actions .duplicate-add,
+  .excel-modal-actions .modal-cancel{grid-column:auto;}
+  .data-menu-panel{position:static!important;width:100%!important;max-height:none;box-shadow:none!important;}
+}
+@media (max-width:720px){
+  .excel-diagnostic-row{align-items:flex-start;flex-direction:column;gap:4px;}
   .excel-diagnostic-row span,
-  .excel-diagnostics-detail li span{
-    text-align:left;
-  }
-  .excel-diagnostics-detail li{
-    flex-direction:column;
-    gap:3px;
-  }
+  .excel-diagnostics-detail li span{text-align:left;}
+  .excel-diagnostics-detail li{flex-direction:column;gap:3px;}
 }
 
-/* ============================================================
-   v3.1.15 info row readability micro-adjustment
-   - 정보행 라벨/값을 살짝 키우되 과하게 진하게 하지 않음
-   - 사이트 계정 ID/PW와 아래 정보 섹션의 글씨 리듬을 부드럽게 맞춤
-   ============================================================ */
-:root{
-  --keybox-info-label:#5F6F86;
-  --keybox-info-value:#243247;
-}
-
-/* 사이트 계정 카드의 ID/PW 라벨·값 */
-.credential-label,
-.account-row-card .credential-label{
-  font-size:13px!important;
-  font-weight:660!important;
-  color:var(--keybox-info-label)!important;
-  letter-spacing:-.2px!important;
-}
-.credential-input,
-.account-row-card .credential-input{
-  font-size:14.5px!important;
-  font-weight:700!important;
-  color:var(--keybox-info-value)!important;
-  letter-spacing:-.15px!important;
-}
-
-/* 학교정보·은행계좌·결제수단 정보행 라벨·값 */
-.info-card .info-row label,
-.info-card .info-label,
-.info-card .label-input{
-  font-size:13.5px!important;
-  font-weight:680!important;
-  color:#44546A!important;
-  letter-spacing:-.22px!important;
-}
-.info-card .inline-input,
-.info-card .info-value,
-.info-card .table-input{
-  font-size:14.5px!important;
-  font-weight:700!important;
-  color:var(--keybox-info-value)!important;
-  letter-spacing:-.15px!important;
-}
-
-/* 입력칸 자체는 커졌어도 표처럼 무겁지 않게 유지 */
-.info-card .info-row{
-  min-height:52px!important;
-}
-.info-card .info-row .copy-pill.copy-icon-only{
-  transform:none!important;
-}
-
-@media (max-width:720px){
-  .info-card .info-row label,
-  .info-card .info-label,
-  .info-card .label-input{
-    font-size:13px!important;
-  }
-  .info-card .inline-input,
-  .info-card .info-value,
-  .info-card .table-input{
-    font-size:14.5px!important;
-  }
+@media print{
+  #siteSection .account-row-card::before{display:none!important;}
 }
