@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.1.16 — CSS 구조 정리
+// 우리학교 키박스 v3.2.0 — 검색 중심 리디자인
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -591,6 +591,8 @@ let pwMode = "plain";
 let deleteMode = { info: {}, account: {} };
 let draggedIndex = null;
 let accountSearchTerm = "";
+let currentFilter = "all";
+let autoSaveTimer = null;
 
 // ============================================================
 // 마스킹 / 표시
@@ -636,6 +638,43 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+function setSaveStatus(status = "saved") {
+  const button = document.getElementById("saveBtn");
+  const text = document.getElementById("saveStatusText");
+  if (!button || !text) return;
+  button.classList.toggle("saving", status === "saving");
+  button.classList.toggle("error", status === "error");
+  text.textContent = status === "saving"
+    ? "변경내용 저장 중"
+    : status === "error"
+      ? "자동 저장을 확인해 주세요"
+      : "이 PC에 자동 저장됨";
+}
+
+function autoSaveNow({ toast = false } = {}) {
+  syncInputs();
+  setSaveStatus("saving");
+  try {
+    const serialized = JSON.stringify(state);
+    if (serialized.length > 5_000_000) throw new Error("데이터가 너무 커 저장할 수 없어요.");
+    localStorage.setItem(STORAGE_KEY, serialized);
+    setSaveStatus("saved");
+    if (toast) showToast("이 PC에 저장했어요.");
+    return true;
+  } catch (err) {
+    console.error(err);
+    setSaveStatus("error");
+    if (toast) showToast(err.message || "자동 저장하지 못했어요.");
+    return false;
+  }
+}
+
+function scheduleAutoSave() {
+  setSaveStatus("saving");
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => autoSaveNow(), 420);
+}
+
 // ============================================================
 // 검색
 // ============================================================
@@ -670,7 +709,8 @@ function toggleFavorite(idx) {
   if (!state.accounts[idx]) return;
   state.accounts[idx].favorite = !state.accounts[idx].favorite;
   render();
-  showToast(state.accounts[idx].favorite ? "빠른복사에 추가했어요." : "빠른복사에서 뺐어요.");
+  scheduleAutoSave();
+  showToast(state.accounts[idx].favorite ? "바로 복사에 추가했어요." : "바로 복사에서 뺐어요.");
 }
 
 // ============================================================
@@ -750,15 +790,20 @@ function normalizeInfoSchema() {
 function renderInfoCards() {
   normalizeInfoSchema();
   const cards = [
-    ["school", "🏫 학교 정보", state.info.school, "wide", "schoolInfo"],
-    ["bank", "🏦 은행 계좌 정보", state.info.bank, "half", "bankInfo"],
-    ["card", "💳 결제 수단", state.info.card, "half", "cardInfo"]
+    ["school", "학교 공통 정보", "기관번호, 주소, 전화번호 등 학교의 공통 정보를 관리합니다.", state.info.school || [], "wide", "schoolInfo"],
+    ["bank", "계좌 정보", "은행명, 계좌번호, 예금주 등 계좌 정보를 정리합니다.", state.info.bank || [], "half", "bankInfo"],
+    ["card", "카드·결제 정보", "법인카드, 결제수단, 담당자 정보를 관리합니다.", state.info.card || [], "half", "cardInfo"]
   ];
+
+  const visibleCards = cards.filter(([key]) => currentFilter === "all" || currentFilter === key);
+  const container = document.getElementById("infoCards");
+  if (!container) return;
+  container.classList.toggle("filtered-out", currentFilter === "accounts" || currentFilter === "favorite");
 
   function renderInfoRow(key, label, value, idx, deleting) {
     return `
       <div class="info-row editable-row ${deleting ? 'selecting' : ''}">
-        ${deleting ? `<label class="select-cell no-print"><input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" aria-label="삭제할 행 선택" /></label>` : ''}
+        ${deleting ? `<label class="select-cell no-print"><input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" aria-label="삭제할 항목 선택" /></label>` : ''}
         <input class="label-input" title="${esc(label)}" value="${esc(label)}" data-info-label-key="${esc(key)}" data-info-idx="${idx}" aria-label="항목명 입력" />
         <div class="copy-cell info-copy-cell">
           <input class="inline-input" title="${esc(displayInfoValue(label, value))}" type="${inputTypeForLabel(label)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
@@ -766,61 +811,35 @@ function renderInfoCards() {
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M5 15V7a2 2 0 0 1 2-2h8"></path></svg>
           </button>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
-  function renderInfoRows(key, rows, deleting) {
-    return rows.map(([label, value], idx) => renderInfoRow(key, label, value, idx, deleting)).join("");
-  }
-
-  function renderSchoolGrid(rows, deleting) {
-    const left = rows.slice(0, 7).map(([label, value], idx) =>
-      renderInfoRow("school", label, value, idx, deleting)).join("");
-    const right = rows.slice(7, 14).map(([label, value], localIdx) =>
-      renderInfoRow("school", label, value, localIdx + 7, deleting)).join("");
-    const extra = rows.slice(14).map(([label, value], localIdx) =>
-      renderInfoRow("school", label, value, localIdx + 14, deleting)).join("");
-
-    return `
-      <div class="school-column school-column-left">${left}</div>
-      <div class="school-column school-column-right">${right}</div>
-      ${extra ? `<div class="school-extra">${extra}</div>` : ""}
-    `;
-  }
-
-  document.getElementById("infoCards").innerHTML = cards.map(([key, title, rows, span, anchorId]) => {
+  container.innerHTML = visibleCards.map(([key, title, description, rows, span, anchorId]) => {
     const deleting = !!deleteMode.info[key];
     const visualClass = key === "card" ? "info-pay" : `info-${key}`;
-
+    const indexedRows = rows.map(([label, value], idx) => ({ label, value, idx }));
     const filteredRows = accountSearchTerm
-      ? rows.filter(([label, value]) => infoRowMatchesSearch(label, value, accountSearchTerm))
-      : rows;
-
-    const noResultHtml = accountSearchTerm && filteredRows.length === 0
-      ? `<div class="section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`
-      : "";
-
-    const gridBody = filteredRows.length > 0
-      ? renderInfoRows(key, filteredRows, deleting)
-      : "";
+      ? indexedRows.filter(item => infoRowMatchesSearch(item.label, item.value, accountSearchTerm))
+      : indexedRows;
+    const gridBody = filteredRows.length
+      ? filteredRows.map(item => renderInfoRow(key, item.label, item.value, item.idx, deleting)).join("")
+      : `<div class="section-no-result">${accountSearchTerm ? "이 정보 종류에는 검색 결과가 없어요." : "등록된 정보가 없어요."}</div>`;
 
     return `
-    <article id="${esc(anchorId)}" class="info-card ${visualClass} ${span} ${deleting ? 'delete-mode' : ''}">
-      <div class="info-card-head no-print-control">
-        <div>
-          <h2>${esc(title)}</h2>
-          <p class="info-sub">${accountSearchTerm ? `${filteredRows.length} / ${rows.length}개 항목` : `${rows.length}개 항목`}</p>
+      <article id="${esc(anchorId)}" class="info-card ${visualClass} ${span} ${deleting ? 'delete-mode' : ''}">
+        <div class="info-card-head no-print-control">
+          <div>
+            <p class="section-kicker">${key === "school" ? "SCHOOL" : key === "bank" ? "BANK" : "PAYMENT"}</p>
+            <h2>${esc(title)}</h2>
+            <p class="info-sub">${esc(description)} · ${accountSearchTerm ? `${filteredRows.length} / ${rows.length}개` : `${rows.length}개`}</p>
+          </div>
+          <div class="mini-actions no-print">
+            <button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')" type="button">+ 정보 추가</button>
+            <button class="small-btn delete-mode-btn ${deleting ? 'active' : ''}" onclick="toggleInfoDelete('${esc(key)}')" type="button">항목 삭제</button>
+          </div>
         </div>
-        <div class="mini-actions no-print">
-          <button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')">+ 행 추가</button>
-          <button class="small-btn delete-mode-btn ${deleting ? 'active' : ''}" onclick="toggleInfoDelete('${esc(key)}')">- 행 삭제</button>
-        </div>
-      </div>
-      <div class="info-grid ${key === 'school' ? 'school-grid' : ''}">
-        ${gridBody}${noResultHtml}
-      </div>
-    </article>`;
+        <div class="info-grid ${key === 'school' ? 'school-grid' : ''}">${gridBody}</div>
+      </article>`;
   }).join("");
 }
 
@@ -838,38 +857,42 @@ function renderQuickAccounts() {
   const el = document.getElementById("quickAccounts");
   if (!el) return;
   const allQuick = getQuickAccounts();
-
-  const quick = accountSearchTerm
+  const filteredQuick = accountSearchTerm
     ? allQuick.filter(item => accountMatchesSearch(item, accountSearchTerm))
     : allQuick;
+  const quick = filteredQuick.slice(0, 6);
 
   const countEl = document.getElementById("quickCount");
   if (countEl) countEl.textContent = accountSearchTerm
-    ? `${quick.length} / ${allQuick.length}개 항목`
-    : `${allQuick.length}개 항목`;
+    ? `${filteredQuick.length} / ${allQuick.length}개`
+    : `${allQuick.length}개`;
 
   if (allQuick.length === 0) {
-    el.innerHTML = `<div class="empty-mini quick-empty-state"><strong>즐겨찾기한 항목이 여기에 표시돼요.</strong><span>자주 쓰는 사이트 계정의 ☆를 눌러 빠른복사에 추가하세요.</span></div>`;
+    el.innerHTML = `<div class="empty-mini quick-empty-state"><strong>즐겨찾기한 정보가 여기에 표시돼요.</strong><span>자주 쓰는 로그인 정보의 ☆를 눌러 바로 복사에 추가하세요.</span></div>`;
     return;
   }
-  if (accountSearchTerm && quick.length === 0) {
-    el.innerHTML = `<div class="empty-mini section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`;
+  if (!filteredQuick.length) {
+    el.innerHTML = `<div class="empty-mini section-no-result">바로 복사에는 검색 결과가 없어요.</div>`;
     return;
   }
-  el.innerHTML = quick.map(item => `
-    <article class="quick-item">
-      <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="빠른복사에서 빼기" type="button">★</button>
-
-      <div class="site-label quick-site-label">
-        <div><strong title="${esc(item.site)}">${esc(quickSiteLabel(item.site))}</strong></div>
-      </div>
-
-      <div class="quick-actions">
-        <button class="copy-btn" onclick="copyAccountField(${item.idx}, 'id')">ID</button>
-        <button class="copy-btn" onclick="copyAccountField(${item.idx}, 'password')">PW</button>
-      </div>
-    </article>
-  `).join("");
+  el.innerHTML = quick.map(item => {
+    const primaryField = hasCopyableValue(item.id) ? "id" : "password";
+    const primaryLabel = primaryField === "id" ? "아이디" : "비밀번호";
+    const primaryValue = item[primaryField] || "";
+    return `
+      <article class="quick-item">
+        <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="바로 복사에서 빼기" type="button">★</button>
+        <div class="site-label quick-site-label"><strong title="${esc(item.site)}">${esc(quickSiteLabel(item.site))}</strong></div>
+        <div class="quick-value">
+          <span class="quick-value-label">${primaryLabel}</span>
+          <span class="quick-value-text" title="${esc(primaryValue)}">${esc(primaryField === "password" && pwMode === "mask" ? maskPw(primaryValue) : primaryValue)}</span>
+        </div>
+        <div class="quick-actions">
+          ${hasCopyableValue(item.id) ? `<button class="copy-btn" onclick="copyAccountField(${item.idx}, 'id')">ID 복사</button>` : ""}
+          ${hasCopyableValue(item.password) ? `<button class="copy-btn" onclick="copyAccountField(${item.idx}, 'password')">PW 복사</button>` : ""}
+        </div>
+      </article>`;
+  }).join("");
 }
 
 // ============================================================
@@ -884,10 +907,10 @@ function updateSearchResultInfo(filteredCount) {
     return;
   }
   if (filteredCount === 0) {
-    infoEl.innerHTML = `"${esc(accountSearchTerm)}"에 대한 검색 결과가 없습니다.<br><span class="search-hint">검색어를 줄이거나 다른 단어로 검색해보세요.</span>`;
+    infoEl.innerHTML = `“${esc(accountSearchTerm)}” 검색 결과가 없어요.<br><span class="search-hint">다른 단어로 검색하거나 새 정보를 추가해 보세요.</span>`;
     infoEl.className = "search-result-info no-result";
   } else {
-    infoEl.textContent = `"${accountSearchTerm}" 검색 결과 ${filteredCount}개`;
+    infoEl.textContent = `“${accountSearchTerm}” 검색 결과 ${filteredCount}개`;
     infoEl.className = "search-result-info has-result";
   }
 }
@@ -909,60 +932,83 @@ function updateClearBtnState() {
 // 사이트 계정 표 렌더
 // ============================================================
 function renderAccounts() {
+  const isAccountFilter = currentFilter === "all" || currentFilter === "accounts" || currentFilter === "favorite";
+  const siteSection = document.getElementById("siteSection");
+  if (siteSection) siteSection.classList.toggle("filtered-out", !isAccountFilter);
+
   const filteredAccounts = state.accounts
     .map((item, idx) => ({...item, idx}))
+    .filter(item => currentFilter !== "favorite" || item.favorite)
     .filter(item => accountMatchesSearch(item, accountSearchTerm));
 
-  document.getElementById("rowCount").textContent = accountSearchTerm
+  const rowCount = document.getElementById("rowCount");
+  if (rowCount) rowCount.textContent = accountSearchTerm || currentFilter === "favorite"
     ? `${filteredAccounts.length} / ${state.accounts.length}개 항목`
     : `${state.accounts.length}개 항목`;
+
   renderQuickAccounts();
-  updateSearchResultInfo(filteredAccounts.length);
+  updateCategoryCounts();
   updateClearBtnState();
 
+  const infoMatchCount = ["school","bank","card"]
+    .filter(key => currentFilter === "all" || currentFilter === key)
+    .reduce((sum, key) => sum + (state.info[key] || []).filter(([label,value]) => infoRowMatchesSearch(label,value,accountSearchTerm)).length, 0);
+  updateSearchResultInfo((isAccountFilter ? filteredAccounts.length : 0) + infoMatchCount);
+
+  if (!isAccountFilter) return;
   const deleting = !!deleteMode.account.__all__;
-  const showMove = false; // v3.1.7: 순서 변경 핸들은 평소 화면에서 숨김
   const html = `
     <div class="account-list ${deleting ? 'delete-mode' : ''}" role="list">
       ${filteredAccounts.map(item => `
-        <article class="account-row-card" role="listitem" ${showMove ? `draggable="true" ondragstart="dragStart(event, ${item.idx})" ondragover="dragOver(event)" ondrop="dropRow(event, ${item.idx})"` : ''} data-idx="${item.idx}">
+        <article class="account-row-card" role="listitem" data-idx="${item.idx}">
           <div class="account-row-head">
-            ${deleting ? `<label class="select-cell account-select no-print"><input type="checkbox" data-account-select="${item.idx}" aria-label="삭제할 행 선택" /></label>` : ''}
-            <button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="빠른복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>
+            ${deleting ? `<label class="select-cell account-select no-print"><input type="checkbox" data-account-select="${item.idx}" aria-label="삭제할 항목 선택" /></label>` : `<button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="바로 복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>`}
             <div class="site-label account-site-label">
               <div class="site-texts">
                 <div class="site-main-line">
                   <input class="table-input site-input account-site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
-                  ${String(item.url || "").trim() ? `<button class="open-url-btn no-print" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">↗ 열기</button>` : ""}
                 </div>
                 <div class="account-meta-line">
                   <textarea class="table-input memo-sub account-memo-input" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
                 </div>
               </div>
             </div>
-            ${showMove ? '<button class="drag-handle account-drag no-print" title="끌어서 순서 변경" type="button">☰</button>' : ''}
           </div>
-
           <div class="credential-stack">
             <section class="credential-row">
               <div class="credential-label">아이디</div>
               <input class="table-input credential-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" />
               <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">복사</button>
             </section>
-
             <section class="credential-row">
               <div class="credential-label">비밀번호</div>
-              <input class="table-input credential-input" title="${esc(item.password)}" type="text" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
+              <input class="table-input credential-input" title="${esc(item.password)}" type="${pwMode === 'mask' ? 'password' : 'text'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
               <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">복사</button>
             </section>
           </div>
+          <div class="account-actions no-print">
+            ${String(item.url || "").trim() ? `<button class="row-action-btn" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">열기 ↗</button>` : `<button class="row-action-btn" type="button" disabled title="등록된 URL 없음">URL 없음</button>`}
+            <button class="row-action-btn ${item.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${item.idx})" type="button">${item.favorite ? '즐겨찾기됨' : '즐겨찾기'}</button>
+          </div>
         </article>`).join("")}
     </div>`;
-  document.getElementById("accountGroups").innerHTML = filteredAccounts.length ? html
-    : accountSearchTerm
-      ? `<div class="empty section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`
-      : `<div class="empty">등록된 사이트 계정이 없어요.</div>`;
+  const groups = document.getElementById("accountGroups");
+  if (groups) groups.innerHTML = filteredAccounts.length ? html
+    : `<div class="empty section-no-result">${accountSearchTerm ? "로그인 정보에는 검색 결과가 없어요." : currentFilter === "favorite" ? "즐겨찾기한 로그인 정보가 없어요." : "등록된 로그인 정보가 없어요."}</div>`;
   resizeMemoAreas();
+}
+
+function updateCategoryCounts() {
+  const counts = {
+    accountCategoryCount: state.accounts.length,
+    schoolCategoryCount: (state.info.school || []).length,
+    bankCategoryCount: (state.info.bank || []).length,
+    cardCategoryCount: (state.info.card || []).length
+  };
+  Object.entries(counts).forEach(([id, count]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `${count}개`;
+  });
 }
 
 function resizeMemoArea(el) {
@@ -977,6 +1023,7 @@ function resizeMemoAreas() {
 function render() {
   renderAccounts();
   renderInfoCards();
+  updateCategoryCounts();
 }
 
 // ============================================================
@@ -1008,6 +1055,7 @@ document.addEventListener("input", e => {
   if (e.target.matches(".inline-input, .table-input, .label-input")) {
     updateFromInput(e.target);
     if (e.target.matches("textarea.memo-sub")) resizeMemoArea(e.target);
+    scheduleAutoSave();
   }
 });
 
@@ -1019,7 +1067,8 @@ function addInfoRow(key) {
   if (!state.info[key]) state.info[key] = [];
   state.info[key].push(["새 항목", ""]);
   render();
-  showToast("행을 추가했어요. 입력 후 브라우저에 저장을 눌러주세요.");
+  scheduleAutoSave();
+  showToast("새 정보를 추가했어요.");
 }
 
 function toggleInfoDelete(key) {
@@ -1040,7 +1089,8 @@ function toggleInfoDelete(key) {
   state.info[key] = state.info[key].filter((_, idx) => !selected.includes(idx));
   deleteMode.info[key] = false;
   render();
-  showToast("선택한 행을 삭제했어요. 보관하려면 브라우저에 저장을 눌러주세요.");
+  scheduleAutoSave();
+  showToast("선택한 정보를 삭제했어요.");
 }
 
 // 사이트 계정 삭제 모드: 카테고리 구분 없이 전체("__all__")에 대해 동작
@@ -1064,14 +1114,16 @@ function toggleAccountDelete() {
   state.accounts = state.accounts.filter((_, idx) => !selected.includes(idx));
   deleteMode.account[category] = false;
   render();
-  showToast("선택한 행을 삭제했어요. 보관하려면 브라우저에 저장을 눌러주세요.");
+  scheduleAutoSave();
+  showToast("선택한 정보를 삭제했어요.");
 }
 
 function addRowToCategory(category) {
   syncInputs();
   state.accounts.push({ category: category || "기타", site:"", id:"", password:"", memo:"", url:"", favorite:false });
   render();
-  showToast("행을 추가했어요. 입력 후 브라우저에 저장을 눌러주세요.");
+  scheduleAutoSave();
+  showToast("새 정보를 추가했어요.");
 }
 function addRow() {
   addRowToCategory("기타");
@@ -1099,7 +1151,8 @@ function dropRow(event, targetIndex) {
   const [moved] = state.accounts.splice(from, 1);
   state.accounts.splice(from < to ? to - 1 : to, 0, moved);
   render();
-  showToast("순서를 바꿨어요. 보관하려면 브라우저에 저장을 눌러주세요.");
+  scheduleAutoSave();
+  showToast("순서를 바꿨어요.");
 }
 
 // ============================================================
@@ -1808,19 +1861,7 @@ function exportBasicExcel() {
 // 로컬 저장 / 불러오기 / 초기화 / JSON 백업
 // ============================================================
 function saveLocal() {
-  syncInputs();
-  try {
-    const serialized = JSON.stringify(state);
-    // localStorage는 브라우저마다 약 5MB 정도로 제한됩니다. 데이터가 너무 크면 저장하지 않습니다.
-    // 문자열 길이 기준으로 간단히 체크합니다.
-    if (serialized.length > 5_000_000) {
-      throw new Error("데이터가 너무 커 저장할 수 없어요. 일부 항목을 줄여주세요.");
-    }
-    localStorage.setItem(STORAGE_KEY, serialized);
-    showToast("브라우저에 저장했어요.");
-  } catch (err) {
-    showToast(err.message || "저장하지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
-  }
+  autoSaveNow({ toast: true });
 }
 function loadLocal(options = {}) {
   const { silent = false } = options;
@@ -1836,7 +1877,8 @@ function loadLocal(options = {}) {
     state.accounts = normalizeAccountDefaults(state.accounts);
     deleteMode = { info: {}, account: {} };
     render();
-    if (!silent) showToast("저장 내용을 불러왔어요.");
+    setSaveStatus("saved");
+    if (!silent) showToast("이 PC 저장내용을 불러왔어요.");
     return true;
   } catch (err) {
     if (!silent) showToast("저장 내용을 불러오지 못했어요. JSON 백업이 있으면 불러와 주세요.");
@@ -1851,19 +1893,20 @@ function resetAll() {
   state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
   deleteMode = { info: {}, account: {} };
   render();
-  showToast("브라우저 저장내용을 초기화했어요.");
+  scheduleAutoSave();
+  showToast("저장정보를 초기화했어요.");
 }
 function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.1.16",
+    version: "v3.2.0",
     exportedAt: new Date().toISOString(),
     data: state
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
   saveAs(blob, `우리학교-키박스-백업-${new Date().toISOString().slice(0,10)}.json`);
-  showToast("JSON 백업 파일을 만들었어요.");
+  showToast("백업 파일을 만들었어요.");
 }
 async function loadJsonFile(file) {
   if (!file) return;
@@ -1875,9 +1918,10 @@ async function loadJsonFile(file) {
     state = { info: data.info, accounts: normalizeAccountDefaults(data.accounts) };
     deleteMode = { info: {}, account: {} };
     render();
-    showToast("JSON 백업을 불러왔어요. 보관하려면 브라우저에 저장을 눌러주세요.");
+    scheduleAutoSave();
+    showToast("백업 파일을 불러왔어요.");
   } catch (err) {
-    showToast("JSON 파일을 불러오지 못했어요.");
+    showToast("백업 파일을 불러오지 못했어요.");
   }
 }
 
@@ -1888,8 +1932,37 @@ function clearSearch() {
   accountSearchTerm = "";
   const accountSearchEl = document.getElementById("searchInput");
   if (accountSearchEl) accountSearchEl.value = "";
-  renderAccounts();
-  renderInfoCards();
+  render();
+  if (accountSearchEl) accountSearchEl.focus({ preventScroll: true });
+}
+
+function setFilter(filter, { scroll = false } = {}) {
+  currentFilter = ["all","favorite","accounts","school","bank","card"].includes(filter) ? filter : "all";
+  document.querySelectorAll("[data-filter]").forEach(button => {
+    const active = button.dataset.filter === currentFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  render();
+  if (scroll) {
+    const target = currentFilter === "accounts" || currentFilter === "favorite"
+      ? document.getElementById("siteSection")
+      : document.getElementById(`${currentFilter}Info`);
+    if (target) calmScrollToElement(target, { duration: 620 });
+  }
+}
+
+function openAddFlow() {
+  if (currentFilter === "school" || currentFilter === "bank" || currentFilter === "card") {
+    addInfoRow(currentFilter);
+    const target = document.getElementById(`${currentFilter}Info`);
+    if (target) calmScrollToElement(target, { duration: 520 });
+  } else {
+    addRow();
+    setFilter("accounts");
+    const target = document.getElementById("siteSection");
+    if (target) calmScrollToElement(target, { duration: 520 });
+  }
 }
 
 // ============================================================
@@ -2012,6 +2085,7 @@ document.querySelectorAll('.top-brand[href^="#"], .top-menu a[href^="#"]:not([da
     const target = document.querySelector(hash);
     if (!target) return;
     event.preventDefault();
+    if (hash === "#managementTools" && "open" in target) target.open = true;
     calmScrollToElement(target, { duration: 980 }).then(() => markSectionArrived(target));
     try { history.replaceState(null, "", hash); } catch (error) {}
   });
@@ -2055,6 +2129,43 @@ document.querySelectorAll("input[name='pwMode']").forEach(el => el.onchange = e 
   render();
 });
 
+document.querySelectorAll("[data-filter]").forEach(button => {
+  button.addEventListener("click", () => setFilter(button.dataset.filter));
+});
+
+document.querySelectorAll("[data-filter-jump]").forEach(button => {
+  button.addEventListener("click", () => setFilter(button.dataset.filterJump, { scroll: true }));
+});
+
+document.querySelectorAll("[data-category-jump]").forEach(button => {
+  button.addEventListener("click", () => setFilter(button.dataset.categoryJump, { scroll: true }));
+});
+
+document.querySelectorAll("[data-backup-trigger]").forEach(button => {
+  button.addEventListener("click", backupJson);
+});
+
+document.querySelectorAll("[data-mobile-action]").forEach(button => {
+  button.addEventListener("click", () => {
+    const action = button.dataset.mobileAction;
+    if (action === "search") {
+      calmScrollToElement(document.getElementById("searchSection"), { duration: 420 }).then(focusSearchInput);
+    } else if (action === "quick") {
+      calmScrollToElement(document.getElementById("quickCopy"), { duration: 420 });
+    } else if (action === "add") {
+      openAddFlow();
+    } else if (action === "backup") {
+      const tools = document.getElementById("managementTools");
+      if (tools) tools.open = true;
+      calmScrollToElement(tools, { duration: 420 });
+    }
+  });
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && accountSearchTerm) clearSearch();
+});
+
 // 저장된 내용이 있으면 페이지를 열 때 자동으로 복원합니다.
 // 저장된 내용이 없거나 손상된 경우에는 기본 예시 데이터로 표시합니다.
-if (!loadLocal({ silent: true })) render();
+if (!loadLocal({ silent: true })) { render(); autoSaveNow(); } else { setSaveStatus("saved"); }
