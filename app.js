@@ -801,9 +801,22 @@ function renderInfoCards() {
   container.classList.toggle("filtered-out", currentFilter === "accounts" || currentFilter === "favorite");
 
   function renderInfoRow(key, label, value, idx, deleting) {
+    if (deleting) {
+      const displayLabel = String(label || "").trim() || "새 항목";
+      const displayValue = String(displayInfoValue(label, value) || "").trim();
+      return `
+        <div class="info-row delete-select-row">
+          <label class="delete-row-select no-print">
+            <input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" onchange="updateInfoDeleteSelection('${esc(key)}')" aria-label="${esc(displayLabel)} 삭제 선택" />
+            <span class="delete-row-content">
+              <strong title="${esc(displayLabel)}">${esc(displayLabel)}</strong>
+              <span class="delete-row-value ${displayValue ? '' : 'is-empty'}" title="${esc(displayValue)}">${esc(displayValue || "입력된 값 없음")}</span>
+            </span>
+          </label>
+        </div>`;
+    }
     return `
-      <div class="info-row editable-row ${deleting ? 'selecting' : ''}">
-        ${deleting ? `<label class="select-cell no-print"><input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" aria-label="삭제할 항목 선택" /></label>` : ''}
+      <div class="info-row editable-row">
         <input class="label-input" title="${esc(label)}" value="${esc(label)}" data-info-label-key="${esc(key)}" data-info-idx="${idx}" aria-label="항목명 입력" />
         <div class="copy-cell info-copy-cell">
           <input class="inline-input" title="${esc(displayInfoValue(label, value))}" type="${inputTypeForLabel(label)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
@@ -834,11 +847,24 @@ function renderInfoCards() {
             <p class="info-sub">${esc(description)} · ${accountSearchTerm ? `${filteredRows.length} / ${rows.length}개` : `${rows.length}개`}</p>
           </div>
           <div class="mini-actions no-print">
-            <button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')" type="button">+ 정보 추가</button>
-            <button class="small-btn delete-mode-btn ${deleting ? 'active' : ''}" onclick="toggleInfoDelete('${esc(key)}')" type="button">항목 삭제</button>
+            ${deleting
+              ? `<span class="delete-mode-label">선택 모드</span>`
+              : `<button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')" type="button">+ 정보 추가</button>
+                 <button class="small-btn delete-mode-btn" onclick="toggleInfoDelete('${esc(key)}')" type="button">항목 삭제</button>`}
           </div>
         </div>
-        <div class="info-grid ${key === 'school' ? 'school-grid' : ''}">${gridBody}</div>
+        ${deleting ? `
+          <div class="delete-selection-bar no-print" data-delete-bar="info-${esc(key)}">
+            <div class="delete-selection-copy">
+              <strong>삭제할 항목을 선택하세요</strong>
+              <span id="infoDeleteCount-${esc(key)}">0개 선택됨</span>
+            </div>
+            <div class="delete-selection-actions">
+              <button class="small-btn" onclick="cancelInfoDelete('${esc(key)}')" type="button">취소</button>
+              <button id="infoDeleteConfirm-${esc(key)}" class="small-btn delete-confirm-btn" onclick="confirmInfoDelete('${esc(key)}')" type="button" disabled>선택 항목 삭제</button>
+            </div>
+          </div>` : ''}
+        <div class="info-grid ${key === 'school' ? 'school-grid' : ''} ${deleting ? 'delete-grid' : ''}">${gridBody}</div>
       </article>`;
   }).join("");
 }
@@ -957,41 +983,79 @@ function renderAccounts() {
 
   if (!isAccountFilter) return;
   const deleting = !!deleteMode.account.__all__;
-  const html = `
-    <div class="account-list ${deleting ? 'delete-mode' : ''}" role="list">
-      ${filteredAccounts.map(item => `
-        <article class="account-row-card" role="listitem" data-idx="${item.idx}">
-          <div class="account-row-head">
-            ${deleting ? `<label class="select-cell account-select no-print"><input type="checkbox" data-account-select="${item.idx}" aria-label="삭제할 항목 선택" /></label>` : `<button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="바로 복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>`}
-            <div class="site-label account-site-label">
-              <div class="site-texts">
-                <div class="site-main-line">
-                  <input class="table-input site-input account-site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
-                </div>
-                <div class="account-meta-line">
-                  <textarea class="table-input memo-sub account-memo-input" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
-                </div>
+  const addButton = document.getElementById("accountAddBtn");
+  const deleteModeButton = document.getElementById("accountDeleteModeBtn");
+  const columnLabels = document.querySelector("#siteSection .account-column-labels");
+  if (columnLabels) columnLabels.hidden = deleting;
+  if (addButton) addButton.hidden = deleting;
+  if (deleteModeButton) {
+    deleteModeButton.hidden = deleting;
+    deleteModeButton.classList.remove("active");
+    deleteModeButton.textContent = "항목 삭제";
+  }
+
+  const accountRows = filteredAccounts.map(item => {
+    if (deleting) {
+      const siteName = String(item.site || "").trim() || "새 로그인 정보";
+      const summary = String(item.id || item.memo || item.url || "").trim();
+      return `
+        <article class="account-row-card account-delete-row" role="listitem" data-idx="${item.idx}">
+          <label class="delete-row-select account-delete-select no-print">
+            <input type="checkbox" data-account-select="${item.idx}" onchange="updateAccountDeleteSelection()" aria-label="${esc(siteName)} 삭제 선택" />
+            <span class="delete-row-content">
+              <strong title="${esc(siteName)}">${esc(siteName)}</strong>
+              <span class="delete-row-value ${summary ? '' : 'is-empty'}" title="${esc(summary)}">${esc(summary || "입력된 정보 없음")}</span>
+            </span>
+          </label>
+        </article>`;
+    }
+    return `
+      <article class="account-row-card" role="listitem" data-idx="${item.idx}">
+        <div class="account-row-head">
+          <button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="바로 복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>
+          <div class="site-label account-site-label">
+            <div class="site-texts">
+              <div class="site-main-line">
+                <input class="table-input site-input account-site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
+              </div>
+              <div class="account-meta-line">
+                <textarea class="table-input memo-sub account-memo-input" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
               </div>
             </div>
           </div>
-          <div class="credential-stack">
-            <section class="credential-row">
-              <div class="credential-label">아이디</div>
-              <input class="table-input credential-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" />
-              <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">복사</button>
-            </section>
-            <section class="credential-row">
-              <div class="credential-label">비밀번호</div>
-              <input class="table-input credential-input" title="${esc(item.password)}" type="${pwMode === 'mask' ? 'password' : 'text'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
-              <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">복사</button>
-            </section>
-          </div>
-          <div class="account-actions no-print">
-            ${String(item.url || "").trim() ? `<button class="row-action-btn" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">열기 ↗</button>` : `<button class="row-action-btn" type="button" disabled title="등록된 URL 없음">URL 없음</button>`}
-            <button class="row-action-btn ${item.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${item.idx})" type="button">${item.favorite ? '즐겨찾기됨' : '즐겨찾기'}</button>
-          </div>
-        </article>`).join("")}
-    </div>`;
+        </div>
+        <div class="credential-stack">
+          <section class="credential-row">
+            <div class="credential-label">아이디</div>
+            <input class="table-input credential-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" />
+            <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">복사</button>
+          </section>
+          <section class="credential-row">
+            <div class="credential-label">비밀번호</div>
+            <input class="table-input credential-input" title="${esc(item.password)}" type="${pwMode === 'mask' ? 'password' : 'text'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
+            <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">복사</button>
+          </section>
+        </div>
+        <div class="account-actions no-print">
+          ${String(item.url || "").trim() ? `<button class="row-action-btn" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">열기 ↗</button>` : `<button class="row-action-btn" type="button" disabled title="등록된 URL 없음">URL 없음</button>`}
+          <button class="row-action-btn ${item.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${item.idx})" type="button">${item.favorite ? '즐겨찾기됨' : '즐겨찾기'}</button>
+        </div>
+      </article>`;
+  }).join("");
+
+  const deleteBar = deleting ? `
+    <div class="delete-selection-bar account-delete-bar no-print">
+      <div class="delete-selection-copy">
+        <strong>삭제할 로그인 정보를 선택하세요</strong>
+        <span id="accountDeleteCount">0개 선택됨</span>
+      </div>
+      <div class="delete-selection-actions">
+        <button class="small-btn" onclick="cancelAccountDelete()" type="button">취소</button>
+        <button id="accountDeleteConfirm" class="small-btn delete-confirm-btn" onclick="confirmAccountDelete()" type="button" disabled>선택 항목 삭제</button>
+      </div>
+    </div>` : "";
+
+  const html = `${deleteBar}<div class="account-list ${deleting ? 'delete-mode' : ''}" role="list">${accountRows}</div>`;
   const groups = document.getElementById("accountGroups");
   if (groups) groups.innerHTML = filteredAccounts.length ? html
     : `<div class="empty section-no-result">${accountSearchTerm ? "로그인 정보에는 검색 결과가 없어요." : currentFilter === "favorite" ? "즐겨찾기한 로그인 정보가 없어요." : "등록된 로그인 정보가 없어요."}</div>`;
@@ -1071,51 +1135,107 @@ function addInfoRow(key) {
   showToast("새 정보를 추가했어요.");
 }
 
-function toggleInfoDelete(key) {
+function getSelectedInfoIndices(key) {
+  return [...document.querySelectorAll(`input[data-info-select="${CSS.escape(key)}"]:checked`)]
+    .map(input => Number(input.dataset.idx));
+}
+
+function updateInfoDeleteSelection(key) {
+  const inputs = [...document.querySelectorAll(`input[data-info-select="${CSS.escape(key)}"]`)];
+  inputs.forEach(input => input.closest(".delete-select-row")?.classList.toggle("is-selected", input.checked));
+  const count = inputs.filter(input => input.checked).length;
+  const countEl = document.getElementById(`infoDeleteCount-${key}`);
+  const confirmButton = document.getElementById(`infoDeleteConfirm-${key}`);
+  if (countEl) countEl.textContent = `${count}개 선택됨`;
+  if (confirmButton) {
+    confirmButton.disabled = count === 0;
+    confirmButton.textContent = count ? `${count}개 항목 삭제` : "선택 항목 삭제";
+  }
+}
+
+function cancelInfoDelete(key) {
+  deleteMode.info[key] = false;
+  render();
+  showToast("삭제를 취소했어요.");
+}
+
+function confirmInfoDelete(key) {
   syncInputs();
-  if (!deleteMode.info[key]) {
-    deleteMode.info[key] = true;
-    render();
-    showToast("삭제할 행을 선택한 뒤 다시 - 행 삭제를 눌러주세요.");
-    return;
-  }
-  const selected = [...document.querySelectorAll(`input[data-info-select="${CSS.escape(key)}"]:checked`)].map(x => Number(x.dataset.idx));
-  if (!selected.length) {
-    deleteMode.info[key] = false;
-    render();
-    return;
-  }
-  if (!confirm("선택한 행을 삭제할까요?")) return;
+  const selected = getSelectedInfoIndices(key);
+  if (!selected.length) return;
+  const count = selected.length;
+  if (!confirm(`선택한 ${count}개 항목을 삭제할까요?\n\n삭제한 항목은 백업 파일이 없으면 되돌리기 어렵습니다.`)) return;
   state.info[key] = state.info[key].filter((_, idx) => !selected.includes(idx));
   deleteMode.info[key] = false;
   render();
   scheduleAutoSave();
-  showToast("선택한 정보를 삭제했어요.");
+  showToast(`${count}개 항목을 삭제했어요.`);
 }
 
-// 사이트 계정 삭제 모드: 카테고리 구분 없이 전체("__all__")에 대해 동작
-// (인자는 HTML 호환성을 위해 유지하지만 사용하지 않음)
-function toggleAccountDelete() {
+function toggleInfoDelete(key) {
   syncInputs();
-  const category = "__all__";
-  if (!deleteMode.account[category]) {
-    deleteMode.account[category] = true;
-    render();
-    showToast("삭제할 행을 선택한 뒤 다시 - 행 삭제를 눌러주세요.");
+  if (deleteMode.info[key]) {
+    cancelInfoDelete(key);
     return;
   }
-  const selected = [...document.querySelectorAll('input[data-account-select]:checked')].map(x => Number(x.dataset.accountSelect));
-  if (!selected.length) {
-    deleteMode.account[category] = false;
-    render();
-    return;
+  deleteMode.info[key] = true;
+  render();
+  requestAnimationFrame(() => {
+    document.querySelector(`input[data-info-select="${CSS.escape(key)}"]`)?.focus();
+  });
+  showToast("삭제할 항목을 선택해 주세요.");
+}
+
+function getSelectedAccountIndices() {
+  return [...document.querySelectorAll('input[data-account-select]:checked')]
+    .map(input => Number(input.dataset.accountSelect));
+}
+
+function updateAccountDeleteSelection() {
+  const inputs = [...document.querySelectorAll('input[data-account-select]')];
+  inputs.forEach(input => input.closest(".account-delete-row")?.classList.toggle("is-selected", input.checked));
+  const count = inputs.filter(input => input.checked).length;
+  const countEl = document.getElementById("accountDeleteCount");
+  const confirmButton = document.getElementById("accountDeleteConfirm");
+  if (countEl) countEl.textContent = `${count}개 선택됨`;
+  if (confirmButton) {
+    confirmButton.disabled = count === 0;
+    confirmButton.textContent = count ? `${count}개 항목 삭제` : "선택 항목 삭제";
   }
-  if (!confirm("선택한 행을 삭제할까요?")) return;
+}
+
+function cancelAccountDelete() {
+  deleteMode.account.__all__ = false;
+  render();
+  showToast("삭제를 취소했어요.");
+}
+
+function confirmAccountDelete() {
+  syncInputs();
+  const selected = getSelectedAccountIndices();
+  if (!selected.length) return;
+  const count = selected.length;
+  if (!confirm(`선택한 ${count}개 로그인 정보를 삭제할까요?\n\n삭제한 정보는 백업 파일이 없으면 되돌리기 어렵습니다.`)) return;
   state.accounts = state.accounts.filter((_, idx) => !selected.includes(idx));
-  deleteMode.account[category] = false;
+  deleteMode.account.__all__ = false;
   render();
   scheduleAutoSave();
-  showToast("선택한 정보를 삭제했어요.");
+  showToast(`${count}개 로그인 정보를 삭제했어요.`);
+}
+
+// 사이트 계정 삭제 모드: 전체 로그인 정보를 한 번에 선택해 정리합니다.
+function toggleAccountDelete() {
+  syncInputs();
+  if (deleteMode.account.__all__) {
+    cancelAccountDelete();
+    return;
+  }
+  deleteMode.account.__all__ = true;
+  render();
+  requestAnimationFrame(() => {
+    document.querySelector('input[data-account-select]')?.focus();
+  });
+  showToast("삭제할 로그인 정보를 선택해 주세요.");
 }
 
 function addRowToCategory(category) {
@@ -1974,7 +2094,13 @@ window.copyText = copyText;
 window.copyAccountField = copyAccountField;
 window.addInfoRow = addInfoRow;
 window.toggleInfoDelete = toggleInfoDelete;
+window.updateInfoDeleteSelection = updateInfoDeleteSelection;
+window.cancelInfoDelete = cancelInfoDelete;
+window.confirmInfoDelete = confirmInfoDelete;
 window.toggleAccountDelete = toggleAccountDelete;
+window.updateAccountDeleteSelection = updateAccountDeleteSelection;
+window.cancelAccountDelete = cancelAccountDelete;
+window.confirmAccountDelete = confirmAccountDelete;
 window.addRow = addRow;
 window.addRowToCategory = addRowToCategory;
 window.dragStart = dragStart;

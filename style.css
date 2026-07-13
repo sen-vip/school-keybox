@@ -186,6 +186,34 @@ input,textarea{color:inherit}
 .account-list.delete-mode .account-row-card{grid-template-columns:minmax(240px,1.45fr) minmax(180px,1fr) minmax(180px,1fr) 150px}
 .select-cell input{width:17px;height:17px;accent-color:var(--danger)}
 
+/* delete selection mode */
+.delete-mode-label{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid #FECDCA;border-radius:999px;background:var(--danger-soft);color:#B42318;font-size:12px;font-weight:850}
+.delete-selection-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 12px;padding:13px 14px;border:1px solid #FECDCA;border-radius:13px;background:#FFF8F7}
+.delete-selection-copy{display:flex;align-items:center;gap:9px;min-width:0}
+.delete-selection-copy strong{color:#7A271A;font-size:13px;font-weight:900}
+.delete-selection-copy span{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:999px;background:#fff;color:#B42318;font-size:11.5px;font-weight:850;white-space:nowrap}
+.delete-selection-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.delete-confirm-btn{border-color:var(--danger);background:var(--danger);color:#fff}
+.delete-confirm-btn:hover:not(:disabled){background:#B42318;border-color:#B42318}
+.delete-confirm-btn:disabled{cursor:not-allowed;border-color:#F2F4F7;background:#F2F4F7;color:#98A2B3;transform:none}
+.info-card.delete-mode,.account-card:has(.account-delete-bar){border-color:#FECDCA;background:linear-gradient(180deg,#fff 0,#fff 82%,rgba(255,241,243,.35) 100%)}
+.delete-grid{gap:8px}
+.delete-select-row,.account-delete-row{min-height:56px;padding:0;border-color:#EAECF0;background:#fff;overflow:hidden}
+.delete-row-select{width:100%;min-height:56px;display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:0;padding:7px 12px;cursor:pointer}
+.delete-row-select input{width:18px;height:18px;margin:0;accent-color:var(--danger);justify-self:center}
+.delete-row-content{min-width:0;display:grid;grid-template-columns:minmax(120px,.8fr) minmax(160px,1.5fr);align-items:center;gap:12px}
+.delete-row-content strong,.delete-row-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.delete-row-content strong{color:#344054;font-size:13px;font-weight:850}
+.delete-row-value{color:#475467;font-size:13px;font-weight:650}
+.delete-row-value.is-empty{color:#98A2B3;font-weight:600}
+.delete-select-row:hover,.account-delete-row:hover{border-color:#FDA29B;background:#FFFBFA;box-shadow:none}
+.delete-select-row.is-selected,.account-delete-row.is-selected{border-color:#FDA29B;background:#FFF1F3;box-shadow:0 0 0 1px rgba(217,45,32,.04)}
+.delete-select-row.is-selected .delete-row-content strong,.account-delete-row.is-selected .delete-row-content strong{color:#B42318}
+.account-delete-bar{margin-top:-2px}
+.account-delete-row{display:block;grid-template-columns:none!important}
+.account-delete-select{padding:8px 12px}
+.account-delete-select .delete-row-content{grid-template-columns:minmax(180px,.9fr) minmax(180px,1.4fr)}
+
 /* information */
 .info-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
 .info-card{padding:22px;min-width:0}
@@ -355,6 +383,15 @@ input,textarea{color:inherit}
   .label-input{padding:4px 6px;font-size:12px}
   .inline-input{min-height:39px}
   .copy-pill{width:39px;height:39px}
+  .delete-selection-bar{display:block;padding:12px}
+  .delete-selection-copy{justify-content:space-between;align-items:flex-start}
+  .delete-selection-copy strong{line-height:1.45}
+  .delete-selection-actions{margin-top:10px;display:grid;grid-template-columns:1fr 1fr}
+  .delete-selection-actions .small-btn{width:100%}
+  .delete-row-select{min-height:62px;padding:9px 10px;grid-template-columns:40px minmax(0,1fr)}
+  .delete-row-content,.account-delete-select .delete-row-content{grid-template-columns:1fr;gap:3px}
+  .delete-row-content strong{font-size:13px}
+  .delete-row-value{font-size:12px}
   .storage-notice{display:block;padding:19px;border-radius:16px}
   .storage-notice h2{font-size:17px}
   .storage-notice p{font-size:12px}

@@ -113,8 +113,8 @@
         </div>
         <div class="account-title-side no-print">
           <p id="rowCount">0개 항목</p>
-          <button class="small-btn add-account-btn" onclick="addRow()" type="button">+ 로그인 정보 추가</button>
-          <button class="small-btn delete-mode-btn" onclick="toggleAccountDelete('__all__')" type="button">항목 삭제</button>
+          <button id="accountAddBtn" class="small-btn add-account-btn" onclick="addRow()" type="button">+ 로그인 정보 추가</button>
+          <button id="accountDeleteModeBtn" class="small-btn delete-mode-btn" onclick="toggleAccountDelete()" type="button">항목 삭제</button>
         </div>
       </div>
       <div class="account-column-labels no-print" aria-hidden="true">
@@ -171,7 +171,7 @@
       </div>
     </details>
 
-    <footer class="app-footer no-print">우리학교 키박스 v3.2.0 · senvip</footer>
+    <footer class="app-footer no-print">우리학교 키박스 v3.2.1 · senvip</footer>
   </main>
 
   <nav class="mobile-bottom-nav no-print" aria-label="모바일 빠른 메뉴">
