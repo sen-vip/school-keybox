@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.2.0 — 검색 중심 리디자인
+// 우리학교 키박스 v3.2.2 — 파일 관리 용어 개선
 // 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
 // ============================================================
 
@@ -1974,7 +1974,7 @@ function exportBasicExcel() {
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
   XLSX.utils.book_append_sheet(wb, accWs, "계정입력");
   XLSX.writeFile(wb, `${getSchoolEmailPrefix()}_KEYBOX_${getTimestampForFilename()}.xlsx`);
-  showToast("현재 내용을 KEYBOX 엑셀 파일로 다운로드했어요.");
+  showToast("현재 정보를 엑셀 파일로 저장했어요.");
 }
 
 // ============================================================
@@ -2001,7 +2001,7 @@ function loadLocal(options = {}) {
     if (!silent) showToast("이 PC 저장내용을 불러왔어요.");
     return true;
   } catch (err) {
-    if (!silent) showToast("저장 내용을 불러오지 못했어요. JSON 백업이 있으면 불러와 주세요.");
+    if (!silent) showToast("저장 내용을 불러오지 못했어요. 엑셀 파일이나 전체 백업 파일이 있으면 다시 가져와 주세요.");
     return false;
   }
 }
@@ -2020,13 +2020,13 @@ function backupJson() {
   syncInputs();
   const payload = {
     app: "우리학교 키박스",
-    version: "v3.2.0",
+    version: "v3.2.2",
     exportedAt: new Date().toISOString(),
     data: state
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
   saveAs(blob, `우리학교-키박스-백업-${new Date().toISOString().slice(0,10)}.json`);
-  showToast("백업 파일을 만들었어요.");
+  showToast("전체 백업 파일을 저장했어요.");
 }
 async function loadJsonFile(file) {
   if (!file) return;
@@ -2039,9 +2039,9 @@ async function loadJsonFile(file) {
     deleteMode = { info: {}, account: {} };
     render();
     scheduleAutoSave();
-    showToast("백업 파일을 불러왔어요.");
+    showToast("전체 백업 파일을 불러왔어요.");
   } catch (err) {
-    showToast("백업 파일을 불러오지 못했어요.");
+    showToast("전체 백업 파일을 불러오지 못했어요.");
   }
 }
 
@@ -2179,8 +2179,10 @@ if (scrollTopBtn) {
 document.getElementById("downloadTemplateBtn").onclick = downloadTemplate;
 document.getElementById("uploadInput").onchange = e => e.target.files[0] && handleUpload(e.target.files[0]);
 document.getElementById("saveBtn").onclick = saveLocal;
-document.getElementById("loadSavedBtn").onclick = loadLocal;
-document.getElementById("exportExcelBtn").onclick = exportBasicExcel;
+const loadSavedBtn = document.getElementById("loadSavedBtn");
+if (loadSavedBtn) loadSavedBtn.onclick = loadLocal;
+const exportExcelBtn = document.getElementById("exportExcelBtn");
+if (exportExcelBtn) exportExcelBtn.onclick = exportBasicExcel;
 
 const jsonBackupBtn = document.getElementById("jsonBackupBtn");
 if (jsonBackupBtn) jsonBackupBtn.onclick = backupJson;
@@ -2271,6 +2273,10 @@ document.querySelectorAll("[data-backup-trigger]").forEach(button => {
   button.addEventListener("click", backupJson);
 });
 
+document.querySelectorAll("[data-excel-export-trigger]").forEach(button => {
+  button.addEventListener("click", exportBasicExcel);
+});
+
 document.querySelectorAll("[data-mobile-action]").forEach(button => {
   button.addEventListener("click", () => {
     const action = button.dataset.mobileAction;
@@ -2280,7 +2286,7 @@ document.querySelectorAll("[data-mobile-action]").forEach(button => {
       calmScrollToElement(document.getElementById("quickCopy"), { duration: 420 });
     } else if (action === "add") {
       openAddFlow();
-    } else if (action === "backup") {
+    } else if (action === "files") {
       const tools = document.getElementById("managementTools");
       if (tools) tools.open = true;
       calmScrollToElement(tools, { duration: 420 });
