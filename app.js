@@ -1,9 +1,14 @@
 // ============================================================
-// 우리학교 키박스 v3.2.2 — 파일 관리 용어 개선
-// 기능 100% 동일. 미사용 함수 제거 + 중복 핸들러 통합
+// 우리학교 키박스 v3.3.1 — 브라우저 암호화 · 쉬운 잠금 안내 · 안전한 백업
+// Web Crypto(AES-GCM + PBKDF2) 기반 로컬 암호화 저장
 // ============================================================
 
-const STORAGE_KEY = "hakdolSchoolKeyboxV30";
+const LEGACY_STORAGE_KEY = "hakdolSchoolKeyboxV30";
+const VAULT_STORAGE_KEY = "hakdolSchoolKeyboxVaultV1";
+const VAULT_VERSION = 1;
+const PBKDF2_ITERATIONS = 600000;
+const AUTO_LOCK_MS = 10 * 60 * 1000;
+const REVEAL_MS = 10 * 1000;
 
 const DEFAULT_INFO = {
   "school": [
@@ -587,17 +592,328 @@ function normalizeAccountDefaults(accounts) {
 }
 
 let state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
-let pwMode = "plain";
+let pwMode = "mask";
 let deleteMode = { info: {}, account: {} };
 let draggedIndex = null;
 let accountSearchTerm = "";
 let currentFilter = "all";
 let autoSaveTimer = null;
+let vaultKey = null;
+let vaultSalt = null;
+let vaultIterations = PBKDF2_ITERATIONS;
+let saveEpoch = 0;
+let isUnlocked = false;
+let securityMode = "unlock";
+let pendingLegacyState = null;
+let autoLockTimer = null;
+let revealedPasswordIndex = null;
+let revealedInfoToken = null;
+let revealTimer = null;
+let privacyScreen = false;
+let saveQueue = Promise.resolve();
+
+// ============================================================
+// 보안 저장소 (Web Crypto)
+// ============================================================
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return btoa(binary);
+}
+function base64ToBytes(value) {
+  const binary = atob(String(value || ""));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+function randomBytes(length) {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return bytes;
+}
+async function deriveVaultKey(password, saltBytes, iterations = PBKDF2_ITERATIONS) {
+  if (!window.crypto?.subtle) throw new Error("Web Crypto unavailable");
+  const baseKey = await crypto.subtle.importKey("raw", textEncoder.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: saltBytes, iterations, hash: "SHA-256" },
+    baseKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+async function encryptStateSnapshot(snapshot, key, saltBytes, iterations = PBKDF2_ITERATIONS) {
+  const iv = randomBytes(12);
+  const plaintext = textEncoder.encode(JSON.stringify(snapshot));
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext));
+  return {
+    app: "hakdol-keybox-vault",
+    version: VAULT_VERSION,
+    cipher: "AES-GCM-256",
+    kdf: { name: "PBKDF2", hash: "SHA-256", iterations, salt: bytesToBase64(saltBytes) },
+    iv: bytesToBase64(iv),
+    ciphertext: bytesToBase64(ciphertext),
+    updatedAt: new Date().toISOString()
+  };
+}
+async function decryptVault(vault, key) {
+  if (!vault || vault.app !== "hakdol-keybox-vault" || !vault.iv || !vault.ciphertext) throw new Error("invalid vault");
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: base64ToBytes(vault.iv) },
+    key,
+    base64ToBytes(vault.ciphertext)
+  );
+  const parsed = JSON.parse(textDecoder.decode(plaintext));
+  if (!parsed?.info || !Array.isArray(parsed?.accounts)) throw new Error("invalid state");
+  parsed.accounts = normalizeAccountDefaults(parsed.accounts);
+  return parsed;
+}
+function getStoredVault() {
+  try {
+    const raw = localStorage.getItem(VAULT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+function vaultSaltFromEnvelope(vault) {
+  if (!vault?.kdf?.salt) throw new Error("invalid salt");
+  return base64ToBytes(vault.kdf.salt);
+}
+function setSecurityError(message = "") {
+  const el = document.getElementById("securityGateError");
+  if (el) el.textContent = message;
+}
+function setSecurityBusy(busy) {
+  ["securitySubmitBtn", "masterPasswordInput", "masterPasswordConfirmInput"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = busy;
+  });
+}
+function purgeDecryptedUi() {
+  accountSearchTerm = "";
+  currentFilter = "all";
+  privacyScreen = false;
+  deleteMode = { info: {}, account: {} };
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+  ["quickAccounts", "accountGroups", "infoCards"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+  const search = document.getElementById("searchInput");
+  if (search) search.value = "";
+  const searchInfo = document.getElementById("searchResultInfo");
+  if (searchInfo) { searchInfo.textContent = ""; searchInfo.className = "search-result-info"; }
+  const rowCount = document.getElementById("rowCount");
+  if (rowCount) rowCount.textContent = "0개 항목";
+  ["quickCount", "accountCategoryCount", "schoolCategoryCount", "bankCategoryCount", "cardCategoryCount"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "0개";
+  });
+  ["excelUploadModal", "securityUtilityModal"].forEach(id => document.getElementById(id)?.remove());
+}
+function configureSecurityGate(mode) {
+  securityMode = mode;
+  // 잠금 화면으로 전환할 때 직전 복호화 값이 DOM 뒤에 남지 않도록 즉시 비웁니다.
+  purgeDecryptedUi();
+  const kicker = document.getElementById("securityGateKicker");
+  const title = document.getElementById("securityGateTitle");
+  const desc = document.getElementById("securityGateDesc");
+  const warning = document.getElementById("securityGateWarning");
+  const confirmWrap = document.getElementById("masterPasswordConfirmWrap");
+  const confirmInput = document.getElementById("masterPasswordConfirmInput");
+  const pwd = document.getElementById("masterPasswordInput");
+  const submit = document.getElementById("securitySubmitBtn");
+  const reset = document.getElementById("securityResetBtn");
+  setSecurityError("");
+  if (pwd) { pwd.value = ""; pwd.autocomplete = mode === "unlock" ? "current-password" : "new-password"; }
+  if (confirmInput) confirmInput.value = "";
+  if (mode === "migrate") {
+    if (kicker) kicker.textContent = "보안 업데이트";
+    if (title) title.textContent = "기존 키박스에 잠금을 설정할게요";
+    if (desc) desc.textContent = "기존 자료는 그대로 두고, 이 브라우저에서 사용할 잠금 비밀번호를 새로 만들어 암호화합니다.";
+    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 12자 이상으로 설정해 주세요."; }
+    if (confirmWrap) confirmWrap.hidden = false;
+    if (submit) submit.textContent = "잠금 비밀번호 만들고 시작";
+    if (reset) reset.hidden = true;
+  } else if (mode === "setup") {
+    if (kicker) kicker.textContent = "처음 보안 설정";
+    if (title) title.textContent = "내 키박스 잠금 비밀번호 만들기";
+    if (desc) desc.textContent = "이 브라우저의 키박스를 열 때 사용할 잠금 비밀번호를 만들어 주세요. 사이트 공용 비밀번호가 아닙니다.";
+    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 12자 이상으로 설정해 주세요."; }
+    if (confirmWrap) confirmWrap.hidden = false;
+    if (submit) submit.textContent = "잠금 비밀번호 만들기";
+    if (reset) reset.hidden = true;
+  } else {
+    if (kicker) kicker.textContent = "보안 잠금";
+    if (title) title.textContent = "우리학교 키박스";
+    if (desc) desc.textContent = "이 브라우저의 키박스 잠금 비밀번호를 입력해 주세요.";
+    if (warning) warning.hidden = true;
+    if (confirmWrap) confirmWrap.hidden = true;
+    if (submit) submit.textContent = "키박스 열기";
+    if (reset) reset.hidden = false;
+  }
+  document.body.classList.add("keybox-locked");
+  document.body.classList.remove("privacy-screen");
+  setTimeout(() => pwd?.focus(), 30);
+}
+function showUnlockedApp() {
+  isUnlocked = true;
+  privacyScreen = false;
+  document.body.classList.remove("keybox-locked", "privacy-screen");
+  const privacyBtn = document.getElementById("privacyBtn");
+  if (privacyBtn) privacyBtn.textContent = "👁 화면 가리기";
+  render();
+  setSaveStatus("saved");
+  resetAutoLockTimer();
+}
+function clearRevealState({ renderNow = true } = {}) {
+  revealedPasswordIndex = null;
+  revealedInfoToken = null;
+  clearTimeout(revealTimer);
+  revealTimer = null;
+  if (renderNow && isUnlocked) render();
+}
+function scheduleRevealReset() {
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(() => clearRevealState(), REVEAL_MS);
+}
+function togglePasswordVisibility(idx) {
+  if (!isUnlocked) return;
+  if (revealedPasswordIndex === idx) return clearRevealState();
+  revealedPasswordIndex = idx;
+  revealedInfoToken = null;
+  render();
+  scheduleRevealReset();
+}
+function toggleInfoVisibility(key, idx) {
+  if (!isUnlocked) return;
+  const token = `${key}:${idx}`;
+  if (revealedInfoToken === token) return clearRevealState();
+  revealedInfoToken = token;
+  revealedPasswordIndex = null;
+  render();
+  scheduleRevealReset();
+}
+function togglePrivacyScreen(forceValue) {
+  if (!isUnlocked) return;
+  privacyScreen = typeof forceValue === "boolean" ? forceValue : !privacyScreen;
+  document.body.classList.toggle("privacy-screen", privacyScreen);
+  clearRevealState({ renderNow: false });
+  const btn = document.getElementById("privacyBtn");
+  if (btn) btn.textContent = privacyScreen ? "👁 가리기 해제" : "👁 화면 가리기";
+  showToast(privacyScreen ? "민감정보 화면을 가렸어요." : "화면 가리기를 해제했어요.");
+}
+function resetAutoLockTimer() {
+  clearTimeout(autoLockTimer);
+  if (isUnlocked) autoLockTimer = setTimeout(() => lockKeybox({ reason: "idle" }), AUTO_LOCK_MS);
+}
+async function lockKeybox({ reason = "manual" } = {}) {
+  if (!isUnlocked) return;
+  try { await autoSaveNow(); } catch (error) {}
+  saveEpoch += 1;
+  isUnlocked = false;
+  vaultKey = null;
+  vaultSalt = null;
+  vaultIterations = PBKDF2_ITERATIONS;
+  state = { info: { school: [], bank: [], card: [] }, accounts: [] };
+  accountSearchTerm = "";
+  currentFilter = "all";
+  clearTimeout(autoLockTimer);
+  clearRevealState({ renderNow: false });
+  configureSecurityGate("unlock");
+  if (reason === "idle") setSecurityError("10분 동안 사용하지 않아 자동으로 잠겼습니다.");
+}
+async function createOrMigrateVault(password, sourceState) {
+  const salt = randomBytes(16);
+  const key = await deriveVaultKey(password, salt);
+  const vault = await encryptStateSnapshot(sourceState, key, salt);
+  // localStorage에 쓰기 전에 메모리에서 먼저 복호화 검증합니다.
+  const verified = await decryptVault(vault, key);
+  localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(vault));
+  saveEpoch += 1;
+  vaultKey = key;
+  vaultSalt = salt;
+  vaultIterations = PBKDF2_ITERATIONS;
+  state = verified;
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+  pendingLegacyState = null;
+  showUnlockedApp();
+}
+async function unlockStoredVault(password, vault = getStoredVault()) {
+  if (!vault) throw new Error("missing vault");
+  const salt = vaultSaltFromEnvelope(vault);
+  const iterations = Number(vault?.kdf?.iterations || PBKDF2_ITERATIONS);
+  const key = await deriveVaultKey(password, salt, iterations);
+  const decrypted = await decryptVault(vault, key);
+  saveEpoch += 1;
+  vaultKey = key;
+  vaultSalt = salt;
+  vaultIterations = iterations;
+  state = decrypted;
+  showUnlockedApp();
+}
+async function handleSecuritySubmit(event) {
+  event.preventDefault();
+  const pwd = document.getElementById("masterPasswordInput")?.value || "";
+  const confirmPwd = document.getElementById("masterPasswordConfirmInput")?.value || "";
+  setSecurityError("");
+  if (!pwd) return setSecurityError("잠금 비밀번호를 입력해 주세요.");
+  if (securityMode !== "unlock") {
+    if (pwd.length < 12) return setSecurityError("잠금 비밀번호는 12자 이상으로 설정해 주세요.");
+    if (pwd !== confirmPwd) return setSecurityError("잠금 비밀번호 확인이 일치하지 않습니다.");
+  }
+  setSecurityBusy(true);
+  try {
+    if (securityMode === "unlock") await unlockStoredVault(pwd);
+    else {
+      const source = securityMode === "migrate" && pendingLegacyState
+        ? pendingLegacyState
+        : { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
+      await createOrMigrateVault(pwd, source);
+      showToast(securityMode === "migrate" ? "기존 데이터를 암호화 저장 방식으로 전환했어요." : "암호화 키박스를 만들었어요.");
+    }
+  } catch (error) {
+    console.error(error);
+    setSecurityError(securityMode === "unlock" ? "잠금 비밀번호가 일치하지 않습니다." : "보안 설정을 완료하지 못했습니다. 다시 시도해 주세요.");
+  } finally {
+    setSecurityBusy(false);
+  }
+}
+function initializeSecurity() {
+  if (!window.crypto?.subtle) {
+    configureSecurityGate("setup");
+    setSecurityError("현재 브라우저에서는 Web Crypto를 사용할 수 없습니다. 최신 브라우저에서 HTTPS로 열어 주세요.");
+    const btn = document.getElementById("securitySubmitBtn");
+    if (btn) btn.disabled = true;
+    return;
+  }
+  const vault = getStoredVault();
+  if (vault) return configureSecurityGate("unlock");
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacyRaw) {
+      const parsed = JSON.parse(legacyRaw);
+      if (parsed?.info && Array.isArray(parsed?.accounts)) {
+        pendingLegacyState = { info: parsed.info, accounts: normalizeAccountDefaults(parsed.accounts) };
+        return configureSecurityGate("migrate");
+      }
+    }
+  } catch (error) { console.error(error); }
+  configureSecurityGate("setup");
+}
+
 
 // ============================================================
 // 마스킹 / 표시
 // ============================================================
-const NO_MASK_LABELS = ["학교 메일", "사업자등록번호", "학교 기관코드", "나이스 조직코드", "와이파이PW", "와이파이 PW"];
+const NO_MASK_LABELS = ["학교 메일", "사업자등록번호", "학교 기관코드", "나이스 조직코드"];
 
 function shouldMaskByLabel(label) {
   const normalized = String(label || "").replace(/\s+/g, "").toLowerCase();
@@ -605,19 +921,17 @@ function shouldMaskByLabel(label) {
 }
 function maskPw(v) {
   if (!v) return "";
-  const text = String(v);
-  if (text.includes("개인인증서") || text.includes("별도") || text === "-") return text;
   return "••••••••";
 }
-function displayPw(v) {
-  return pwMode === "mask" ? maskPw(String(v || "")) : String(v || "");
+function displayPw(v, revealed = false) {
+  return revealed ? String(v || "") : maskPw(String(v || ""));
 }
-function displayInfoValue(label, value) {
-  if (pwMode !== "mask" || !shouldMaskByLabel(label)) return String(value || "");
+function displayInfoValue(label, value, revealed = false) {
+  if (!shouldMaskByLabel(label) || revealed) return String(value || "");
   return maskPw(String(value || ""));
 }
-function inputTypeForLabel(label) {
-  return pwMode === "mask" && shouldMaskByLabel(label) ? "password" : "text";
+function inputTypeForLabel(label, revealed = false) {
+  return shouldMaskByLabel(label) && !revealed ? "password" : "text";
 }
 function normalizeSiteName(name) {
   return String(name || "")
@@ -648,31 +962,50 @@ function setSaveStatus(status = "saved") {
     ? "변경내용 저장 중"
     : status === "error"
       ? "자동 저장을 확인해 주세요"
-      : "이 PC에 자동 저장됨";
+      : "암호화 자동 저장됨";
 }
 
 function autoSaveNow({ toast = false } = {}) {
+  if (!isUnlocked || !vaultKey || !vaultSalt) return Promise.resolve(false);
   syncInputs();
   setSaveStatus("saving");
-  try {
-    const serialized = JSON.stringify(state);
-    if (serialized.length > 5_000_000) throw new Error("데이터가 너무 커 저장할 수 없어요.");
-    localStorage.setItem(STORAGE_KEY, serialized);
-    setSaveStatus("saved");
-    if (toast) showToast("이 PC에 저장했어요.");
-    return true;
-  } catch (err) {
-    console.error(err);
+  const snapshot = deepClone(state);
+  const keyRef = vaultKey;
+  const saltRef = vaultSalt;
+  const iterationsRef = vaultIterations;
+  const epoch = saveEpoch;
+  const serialized = JSON.stringify(snapshot);
+  if (serialized.length > 5_000_000) {
     setSaveStatus("error");
-    if (toast) showToast(err.message || "자동 저장하지 못했어요.");
-    return false;
+    if (toast) showToast("데이터가 너무 커 저장할 수 없어요.");
+    return Promise.resolve(false);
   }
+  const task = async () => {
+    try {
+      const vault = await encryptStateSnapshot(snapshot, keyRef, saltRef, iterationsRef);
+      if (epoch !== saveEpoch || !isUnlocked || vaultKey !== keyRef) return false;
+      localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(vault));
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      setSaveStatus("saved");
+      if (toast) showToast("암호화해서 이 브라우저에 저장했어요.");
+      return true;
+    } catch (err) {
+      console.error(err);
+      setSaveStatus("error");
+      if (toast) showToast("암호화 저장하지 못했어요.");
+      return false;
+    }
+  };
+  saveQueue = saveQueue.then(task, task);
+  return saveQueue;
 }
 
 function scheduleAutoSave() {
+  if (!isUnlocked) return;
   setSaveStatus("saving");
   clearTimeout(autoSaveTimer);
-  autoSaveTimer = setTimeout(() => autoSaveNow(), 420);
+  autoSaveTimer = setTimeout(() => autoSaveNow(), 320);
+  resetAutoLockTimer();
 }
 
 // ============================================================
@@ -738,6 +1071,12 @@ function copyAccountField(idx, field) {
   if (!item) return;
   copyText(item[field], field === "id" ? "아이디" : field === "password" ? "비밀번호" : "값");
 }
+function copyInfoField(key, idx) {
+  syncInputs();
+  const row = state.info?.[key]?.[idx];
+  if (!row) return;
+  copyText(row[1], row[0] || "값");
+}
 function openAccountUrl(idx) {
   syncInputs();
   const item = state.accounts[idx];
@@ -801,13 +1140,16 @@ function renderInfoCards() {
   container.classList.toggle("filtered-out", currentFilter === "accounts" || currentFilter === "favorite");
 
   function renderInfoRow(key, label, value, idx, deleting) {
+    const sensitive = shouldMaskByLabel(label);
+    const token = `${key}:${idx}`;
+    const revealed = sensitive && revealedInfoToken === token;
     if (deleting) {
       const displayLabel = String(label || "").trim() || "새 항목";
-      const displayValue = String(displayInfoValue(label, value) || "").trim();
+      const displayValue = String(displayInfoValue(label, value, false) || "").trim();
       return `
         <div class="info-row delete-select-row">
           <label class="delete-row-select no-print">
-            <input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" onchange="updateInfoDeleteSelection('${esc(key)}')" aria-label="${esc(displayLabel)} 삭제 선택" />
+            <input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" data-action="info-delete-select" data-key="${esc(key)}" aria-label="${esc(displayLabel)} 삭제 선택" />
             <span class="delete-row-content">
               <strong title="${esc(displayLabel)}">${esc(displayLabel)}</strong>
               <span class="delete-row-value ${displayValue ? '' : 'is-empty'}" title="${esc(displayValue)}">${esc(displayValue || "입력된 값 없음")}</span>
@@ -818,9 +1160,10 @@ function renderInfoCards() {
     return `
       <div class="info-row editable-row">
         <input class="label-input" title="${esc(label)}" value="${esc(label)}" data-info-label-key="${esc(key)}" data-info-idx="${idx}" aria-label="항목명 입력" />
-        <div class="copy-cell info-copy-cell">
-          <input class="inline-input" title="${esc(displayInfoValue(label, value))}" type="${inputTypeForLabel(label)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
-          <button class="copy-pill copy-icon-only no-print" onclick="copyText(document.querySelector('[data-info-key=${esc(key)}][data-info-idx=\\'${idx}\\']').value, '${esc(label)}')" type="button" title="복사하기" aria-label="${esc(label)} 복사">
+        <div class="copy-cell info-copy-cell ${sensitive ? 'has-reveal' : ''}">
+          <input class="inline-input ${sensitive ? 'sensitive-value' : ''}" title="${esc(sensitive ? (revealed ? String(value || '') : '민감정보') : String(value || ''))}" type="${inputTypeForLabel(label, revealed)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
+          ${sensitive ? `<button class="copy-pill reveal-pill no-print" data-action="toggle-info-visibility" data-key="${esc(key)}" data-idx="${idx}" type="button" title="${revealed ? '다시 가리기' : '10초 동안 보기'}" aria-label="${esc(label)} ${revealed ? '가리기' : '보기'}">${revealed ? '🙈' : '👁'}</button>` : ''}
+          <button class="copy-pill copy-icon-only no-print" data-action="copy-info" data-key="${esc(key)}" data-idx="${idx}" type="button" title="복사하기" aria-label="${esc(label)} 복사">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M5 15V7a2 2 0 0 1 2-2h8"></path></svg>
           </button>
         </div>
@@ -849,8 +1192,8 @@ function renderInfoCards() {
           <div class="mini-actions no-print">
             ${deleting
               ? `<span class="delete-mode-label">선택 모드</span>`
-              : `<button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')" type="button">+ 정보 추가</button>
-                 <button class="small-btn delete-mode-btn" onclick="toggleInfoDelete('${esc(key)}')" type="button">항목 삭제</button>`}
+              : `<button class="small-btn add-inline" data-action="add-info" data-key="${esc(key)}" type="button">+ 정보 추가</button>
+                 <button class="small-btn delete-mode-btn" data-action="toggle-info-delete" data-key="${esc(key)}" type="button">항목 삭제</button>`}
           </div>
         </div>
         ${deleting ? `
@@ -860,8 +1203,8 @@ function renderInfoCards() {
               <span id="infoDeleteCount-${esc(key)}">0개 선택됨</span>
             </div>
             <div class="delete-selection-actions">
-              <button class="small-btn" onclick="cancelInfoDelete('${esc(key)}')" type="button">취소</button>
-              <button id="infoDeleteConfirm-${esc(key)}" class="small-btn delete-confirm-btn" onclick="confirmInfoDelete('${esc(key)}')" type="button" disabled>선택 항목 삭제</button>
+              <button class="small-btn" data-action="cancel-info-delete" data-key="${esc(key)}" type="button">취소</button>
+              <button id="infoDeleteConfirm-${esc(key)}" class="small-btn delete-confirm-btn" data-action="confirm-info-delete" data-key="${esc(key)}" type="button" disabled>선택 항목 삭제</button>
             </div>
           </div>` : ''}
         <div class="info-grid ${key === 'school' ? 'school-grid' : ''} ${deleting ? 'delete-grid' : ''}">${gridBody}</div>
@@ -907,15 +1250,15 @@ function renderQuickAccounts() {
     const primaryValue = item[primaryField] || "";
     return `
       <article class="quick-item">
-        <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="바로 복사에서 빼기" type="button">★</button>
+        <button class="quick-star on" data-action="toggle-favorite" data-idx="${item.idx}" title="바로 복사에서 빼기" type="button">★</button>
         <div class="site-label quick-site-label"><strong title="${esc(item.site)}">${esc(quickSiteLabel(item.site))}</strong></div>
         <div class="quick-value">
           <span class="quick-value-label">${primaryLabel}</span>
-          <span class="quick-value-text" title="${esc(primaryValue)}">${esc(primaryField === "password" && pwMode === "mask" ? maskPw(primaryValue) : primaryValue)}</span>
+          <span class="quick-value-text" title="${primaryField === "password" ? "비밀번호는 기본 가림" : esc(primaryValue)}">${esc(primaryField === "password" ? maskPw(primaryValue) : primaryValue)}</span>
         </div>
         <div class="quick-actions">
-          ${hasCopyableValue(item.id) ? `<button class="copy-btn" onclick="copyAccountField(${item.idx}, 'id')">ID 복사</button>` : ""}
-          ${hasCopyableValue(item.password) ? `<button class="copy-btn" onclick="copyAccountField(${item.idx}, 'password')">PW 복사</button>` : ""}
+          ${hasCopyableValue(item.id) ? `<button class="copy-btn" data-action="copy-account" data-idx="${item.idx}" data-field="id">ID 복사</button>` : ""}
+          ${hasCopyableValue(item.password) ? `<button class="copy-btn" data-action="copy-account" data-idx="${item.idx}" data-field="password">PW 복사</button>` : ""}
         </div>
       </article>`;
   }).join("");
@@ -1001,7 +1344,7 @@ function renderAccounts() {
       return `
         <article class="account-row-card account-delete-row" role="listitem" data-idx="${item.idx}">
           <label class="delete-row-select account-delete-select no-print">
-            <input type="checkbox" data-account-select="${item.idx}" onchange="updateAccountDeleteSelection()" aria-label="${esc(siteName)} 삭제 선택" />
+            <input type="checkbox" data-account-select="${item.idx}" data-action="account-delete-select" aria-label="${esc(siteName)} 삭제 선택" />
             <span class="delete-row-content">
               <strong title="${esc(siteName)}">${esc(siteName)}</strong>
               <span class="delete-row-value ${summary ? '' : 'is-empty'}" title="${esc(summary)}">${esc(summary || "입력된 정보 없음")}</span>
@@ -1012,7 +1355,7 @@ function renderAccounts() {
     return `
       <article class="account-row-card" role="listitem" data-idx="${item.idx}">
         <div class="account-row-head">
-          <button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" onclick="toggleFavorite(${item.idx})" title="바로 복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>
+          <button class="star-btn account-star no-print ${item.favorite ? 'on' : ''}" data-action="toggle-favorite" data-idx="${item.idx}" title="바로 복사 ${item.favorite ? '해제' : '추가'}" type="button">${item.favorite ? '★' : '☆'}</button>
           <div class="site-label account-site-label">
             <div class="site-texts">
               <div class="site-main-line">
@@ -1028,17 +1371,18 @@ function renderAccounts() {
           <section class="credential-row">
             <div class="credential-label">아이디</div>
             <input class="table-input credential-input" title="${esc(item.id)}" value="${esc(item.id)}" data-account-idx="${item.idx}" data-field="id" aria-label="아이디 입력" />
-            <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'id')" title="아이디 복사" type="button">복사</button>
+            <button class="copy-chip credential-copy no-print" data-action="copy-account" data-idx="${item.idx}" data-field="id" title="아이디 복사" type="button">복사</button>
           </section>
-          <section class="credential-row">
+          <section class="credential-row password-row">
             <div class="credential-label">비밀번호</div>
-            <input class="table-input credential-input" title="${esc(item.password)}" type="${pwMode === 'mask' ? 'password' : 'text'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
-            <button class="copy-chip credential-copy no-print" onclick="copyAccountField(${item.idx}, 'password')" title="비밀번호 복사" type="button">복사</button>
+            <input class="table-input credential-input sensitive-value" title="${revealedPasswordIndex === item.idx ? esc(item.password) : '비밀번호'}" type="${revealedPasswordIndex === item.idx ? 'text' : 'password'}" value="${esc(item.password)}" data-account-idx="${item.idx}" data-field="password" aria-label="비밀번호 입력" />
+            <button class="copy-chip reveal-chip no-print" data-action="toggle-password" data-idx="${item.idx}" title="${revealedPasswordIndex === item.idx ? '다시 가리기' : '10초 동안 보기'}" type="button">${revealedPasswordIndex === item.idx ? '🙈' : '👁'}</button>
+            <button class="copy-chip credential-copy no-print" data-action="copy-account" data-idx="${item.idx}" data-field="password" title="비밀번호 복사" type="button">복사</button>
           </section>
         </div>
         <div class="account-actions no-print">
-          ${String(item.url || "").trim() ? `<button class="row-action-btn" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">열기 ↗</button>` : `<button class="row-action-btn" type="button" disabled title="등록된 URL 없음">URL 없음</button>`}
-          <button class="row-action-btn ${item.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${item.idx})" type="button">${item.favorite ? '즐겨찾기됨' : '즐겨찾기'}</button>
+          ${String(item.url || "").trim() ? `<button class="row-action-btn" data-action="open-account" data-idx="${item.idx}" title="사이트 열기" type="button">열기 ↗</button>` : `<button class="row-action-btn" type="button" disabled title="등록된 URL 없음">URL 없음</button>`}
+          <button class="row-action-btn ${item.favorite ? 'is-favorite' : ''}" data-action="toggle-favorite" data-idx="${item.idx}" type="button">${item.favorite ? '즐겨찾기됨' : '즐겨찾기'}</button>
         </div>
       </article>`;
   }).join("");
@@ -1050,8 +1394,8 @@ function renderAccounts() {
         <span id="accountDeleteCount">0개 선택됨</span>
       </div>
       <div class="delete-selection-actions">
-        <button class="small-btn" onclick="cancelAccountDelete()" type="button">취소</button>
-        <button id="accountDeleteConfirm" class="small-btn delete-confirm-btn" onclick="confirmAccountDelete()" type="button" disabled>선택 항목 삭제</button>
+        <button class="small-btn" data-action="cancel-account-delete" type="button">취소</button>
+        <button id="accountDeleteConfirm" class="small-btn delete-confirm-btn" data-action="confirm-account-delete" type="button" disabled>선택 항목 삭제</button>
       </div>
     </div>` : "";
 
@@ -1291,24 +1635,18 @@ function forceTextWorksheet(ws) {
   return ws;
 }
 
-function persistBrowserSaveSilently() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
+async function persistBrowserSaveSilently() {
+  return autoSaveNow();
 }
 
 async function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   const infoRows = [["구분", "항목", "값"]];
   for (const [key, label] of [["school","학교 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
-    DEFAULT_INFO[key].forEach(([name, value]) => infoRows.push([label, name, value]));
+    DEFAULT_INFO[key].forEach(([name, value]) => infoRows.push([label, name, shouldMaskByLabel(name) ? "" : value]));
   }
   const inputRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
-  DEFAULT_ACCOUNTS.forEach(a => inputRows.push([a.site, a.id, a.password, a.memo, a.url || "", a.favorite ? "Y" : ""]));
+  DEFAULT_ACCOUNTS.forEach(a => inputRows.push([a.site, a.id, "", a.memo, a.url || "", a.favorite ? "Y" : ""]));
   const infoWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(infoRows));
   const accWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(inputRows));
   infoWs["!cols"] = [{wch:18},{wch:24},{wch:36}];
@@ -1316,9 +1654,8 @@ async function downloadTemplate() {
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
   XLSX.utils.book_append_sheet(wb, accWs, "계정입력");
   XLSX.writeFile(wb, "학교키박스_기본입력파일.xlsx");
-  showToast("개인 정보가 빠진 기본 입력파일을 다운로드했어요.");
+  showToast("비밀번호와 민감값을 비운 기본 입력파일을 저장했어요.");
 }
-
 
 function normalizeSheetLookupName(name) {
   return cleanImportText(name).replace(/[\s_\-()（）\[\]【】]/g, "").toLowerCase();
@@ -1352,6 +1689,7 @@ function accountHasMeaningfulValue(account) {
 function parseUploadedWorkbook(wb) {
   const uploadedInfo = { school: [], bank: [], card: [] };
   let uploadedAccounts = [];
+  let hasPasswordColumn = false;
   const duplicateAccounts = [];
   const ignoredAccounts = [];
 
@@ -1435,6 +1773,7 @@ function parseUploadedWorkbook(wb) {
       const siteCol = getHeaderIndex(headerMap, ["사이트명", "사이트", "계정명", "이름", "서비스명", "쇼핑몰", "기관명"]);
       const idCol = getHeaderIndex(headerMap, ["아이디", "id", "ID", "계정", "계정ID", "로그인ID", "사용자ID"]);
       const passwordCol = getHeaderIndex(headerMap, ["비밀번호", "password", "PW", "pw", "패스워드", "암호"]);
+      hasPasswordColumn = passwordCol >= 0;
       const memoCol = getHeaderIndex(headerMap, ["메모", "비고", "설명", "기관", "담당", "부서"]);
       const urlCol = getHeaderIndex(headerMap, ["URL", "url", "접속주소", "주소", "링크", "홈페이지"]);
       const favCol = getHeaderIndex(headerMap, ["즐겨찾기", "favorite", "빠른복사", "즐겨"]);
@@ -1482,6 +1821,7 @@ function parseUploadedWorkbook(wb) {
       console.error(err);
     }
   } else if (wb.SheetNames.length) {
+    hasPasswordColumn = true;
     const sheetName = wb.SheetNames[0];
     const sheet = wb.Sheets[sheetName];
     diagnostics.accountsSheetName = sheetName;
@@ -1533,7 +1873,8 @@ function parseUploadedWorkbook(wb) {
     ignoredAccounts,
     diagnostics,
     hasInfoSheet,
-    hasAccountsSheet
+    hasAccountsSheet,
+    hasPasswordColumn
   };
 }
 
@@ -1683,7 +2024,7 @@ function planItemList(plan) {
     ...(plan.accounts || [])
   ];
 }
-function applyUploadPlan(plan, mode) {
+async function applyUploadPlan(plan, mode) {
   if (!plan || !mode) return;
   syncInputs();
   const nextState = { info: deepClone(state.info || {}), accounts: Array.isArray(state.accounts) ? state.accounts.map(a => ({...a})) : [] };
@@ -1700,15 +2041,21 @@ function applyUploadPlan(plan, mode) {
         const key = importAccountKey(acc);
         if (key && !existingFavoriteByKey.has(key)) existingFavoriteByKey.set(key, acc.favorite === true);
       });
+      const existingPasswordByKey = new Map();
+      nextState.accounts.forEach(acc => {
+        const key = importAccountKey(acc);
+        if (key && !existingPasswordByKey.has(key)) existingPasswordByKey.set(key, acc.password || "");
+      });
       nextState.accounts = (plan.uploaded.accounts || []).map(acc => {
         const uploaded = normalizeUploadedAccount(acc);
         const key = importAccountKey(uploaded);
+        if (!plan.uploaded?.hasPasswordColumn && existingPasswordByKey.has(key)) uploaded.password = existingPasswordByKey.get(key);
         return { ...uploaded, favorite: existingFavoriteByKey.has(key) ? existingFavoriteByKey.get(key) : uploaded.favorite };
       });
     }
     state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
     deleteMode = { info: {}, account: {} };
-    const saved = persistBrowserSaveSilently();
+    const saved = await persistBrowserSaveSilently();
     render();
     showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 엑셀에 없는 항목 ${plan.counts.removed}개를 정리했어요.${saved ? " 브라우저에도 저장했어요." : " 브라우저 저장은 실패했어요."}`);
     return;
@@ -1747,7 +2094,7 @@ function applyUploadPlan(plan, mode) {
 
   state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
   deleteMode = { info: {}, account: {} };
-  const saved = persistBrowserSaveSilently();
+  const saved = await persistBrowserSaveSilently();
   render();
   const message = mode === "add-only"
     ? `새 항목 ${plan.counts.new}개만 추가했어요.`
@@ -1882,7 +2229,7 @@ function showUploadReviewModal(plan) {
       <p class="excel-modal-warn">중복까지 모두 새로 추가하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
     </div>
   `;
-  modal.addEventListener("click", (event) => {
+  modal.addEventListener("click", async (event) => {
     const action = event.target?.dataset?.uploadAction;
     if (!action && event.target !== modal) return;
     const selectedAction = action || "cancel";
@@ -1912,7 +2259,7 @@ function showUploadReviewModal(plan) {
       const ok = confirm(confirmMsg);
       if (!ok) return;
     }
-    applyUploadPlan(plan, selectedAction);
+    await applyUploadPlan(plan, selectedAction);
     closeUploadModal();
     resetUploadInput();
   });
@@ -1958,90 +2305,212 @@ function getTimestampForFilename() {
   const mi = String(d.getMinutes()).padStart(2, "0");
   return `${yy}${mm}${dd}_${hh}${mi}`;
 }
+function closeSecurityUtilityModal() {
+  document.getElementById("securityUtilityModal")?.remove();
+}
 function exportBasicExcel() {
+  if (!isUnlocked) return;
+  syncInputs();
+  closeSecurityUtilityModal();
+  const modal = document.createElement("div");
+  modal.id = "securityUtilityModal";
+  modal.className = "excel-modal-backdrop no-print";
+  modal.innerHTML = `
+    <div class="excel-modal security-export-modal" role="dialog" aria-modal="true" aria-labelledby="safeExcelTitle">
+      <button class="excel-modal-close" type="button" data-safe-excel="cancel" aria-label="닫기">×</button>
+      <div class="excel-modal-kicker">안전한 엑셀 저장</div>
+      <h3 id="safeExcelTitle">민감정보는 기본 제외할게요</h3>
+      <p class="excel-modal-desc">일반 엑셀 파일은 키박스처럼 암호화되지 않습니다. 기본 저장에서는 로그인 비밀번호와 민감한 기본정보 값을 제외합니다.</p>
+      <label class="security-option-row">
+        <input id="includeSensitiveExcel" type="checkbox" />
+        <span><strong>비밀번호·민감값 포함</strong><small>다른 PC로 전체 정보를 옮길 때만 선택하세요.</small></span>
+      </label>
+      <div id="excelSensitiveWarning" class="security-file-warning" hidden>
+        <strong>⚠️ 주의</strong>
+        <p>이 옵션을 켜면 엑셀 파일에 비밀번호와 민감정보가 평문으로 저장됩니다. 공유폴더·메일·메신저·클라우드에 보관하지 않는 것을 권장합니다.</p>
+      </div>
+      <div class="excel-modal-actions">
+        <button class="btn primary" type="button" data-safe-excel="save">엑셀 저장</button>
+        <button class="btn modal-cancel" type="button" data-safe-excel="cancel">취소</button>
+      </div>
+    </div>`;
+  const checkbox = modal.querySelector("#includeSensitiveExcel");
+  const warning = modal.querySelector("#excelSensitiveWarning");
+  checkbox?.addEventListener("change", () => { if (warning) warning.hidden = !checkbox.checked; });
+  modal.addEventListener("click", (event) => {
+    const action = event.target?.dataset?.safeExcel;
+    if (!action && event.target !== modal) return;
+    if ((action || "cancel") === "cancel") return closeSecurityUtilityModal();
+    const includeSensitive = !!checkbox?.checked;
+    if (includeSensitive) {
+      const ok = confirm("비밀번호와 민감정보가 암호화되지 않은 엑셀에 그대로 저장됩니다.\n위험을 확인하고 다운로드할까요?");
+      if (!ok) return;
+    }
+    performExcelExport(includeSensitive);
+    closeSecurityUtilityModal();
+  });
+  document.body.appendChild(modal);
+}
+function performExcelExport(includeSensitive = false) {
   syncInputs();
   const wb = XLSX.utils.book_new();
   const infoRows = [["구분", "항목", "값"]];
   for (const [key, label] of [["school","학교 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
-    (state.info[key] || []).forEach(([name, value]) => infoRows.push([label, name, value]));
+    (state.info[key] || []).forEach(([name, value]) => {
+      infoRows.push([label, name, includeSensitive || !shouldMaskByLabel(name) ? value : ""]);
+    });
   }
-  const accountRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
-  state.accounts.forEach(a => accountRows.push([a.site || "", a.id || "", a.password || "", a.memo || "", a.url || "", a.favorite ? "Y" : ""]));
+  const accountRows = includeSensitive
+    ? [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]]
+    : [["사이트명", "아이디", "메모", "URL", "즐겨찾기"]];
+  state.accounts.forEach(a => accountRows.push(includeSensitive
+    ? [a.site || "", a.id || "", a.password || "", a.memo || "", a.url || "", a.favorite ? "Y" : ""]
+    : [a.site || "", a.id || "", a.memo || "", a.url || "", a.favorite ? "Y" : ""]));
   const infoWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(infoRows));
   const accWs = forceTextWorksheet(XLSX.utils.aoa_to_sheet(accountRows));
   infoWs["!cols"] = [{wch:18},{wch:24},{wch:36}];
-  accWs["!cols"] = [{wch:34},{wch:24},{wch:24},{wch:42},{wch:46},{wch:10}];
+  accWs["!cols"] = includeSensitive
+    ? [{wch:34},{wch:24},{wch:24},{wch:42},{wch:46},{wch:10}]
+    : [{wch:34},{wch:24},{wch:42},{wch:46},{wch:10}];
   XLSX.utils.book_append_sheet(wb, infoWs, "기본정보");
   XLSX.utils.book_append_sheet(wb, accWs, "계정입력");
-  XLSX.writeFile(wb, `${getSchoolEmailPrefix()}_KEYBOX_${getTimestampForFilename()}.xlsx`);
-  showToast("현재 정보를 엑셀 파일로 저장했어요.");
+  const suffix = includeSensitive ? "KEY_PASSWORD" : "KEY_SAFE";
+  XLSX.writeFile(wb, `${getSchoolEmailPrefix()}_${suffix}_${getTimestampForFilename()}.xlsx`);
+  showToast(includeSensitive ? "민감정보가 포함된 엑셀을 저장했어요. 파일 보관에 주의해 주세요." : "민감정보를 제외한 엑셀을 저장했어요.");
 }
 
 // ============================================================
-// 로컬 저장 / 불러오기 / 초기화 / JSON 백업
+// 암호화 저장 / 초기화 / 백업
 // ============================================================
 function saveLocal() {
   autoSaveNow({ toast: true });
 }
 function loadLocal(options = {}) {
-  const { silent = false } = options;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      if (!silent) showToast("저장된 내용이 없어요.");
-      return false;
-    }
-    const savedState = JSON.parse(raw);
-    if (!savedState || !savedState.info || !Array.isArray(savedState.accounts)) throw new Error("invalid saved data");
-    state = savedState;
-    state.accounts = normalizeAccountDefaults(state.accounts);
-    deleteMode = { info: {}, account: {} };
-    render();
-    setSaveStatus("saved");
-    if (!silent) showToast("이 PC 저장내용을 불러왔어요.");
-    return true;
-  } catch (err) {
-    if (!silent) showToast("저장 내용을 불러오지 못했어요. 엑셀 파일이나 전체 백업 파일이 있으면 다시 가져와 주세요.");
+  if (!isUnlocked) {
+    if (!options.silent) showToast("잠금 비밀번호를 입력하면 이 브라우저에 저장된 키박스를 자동으로 불러옵니다.");
     return false;
   }
+  render();
+  if (!options.silent) showToast("현재 암호화 저장내용을 표시하고 있어요.");
+  return true;
 }
-function resetAll() {
-  if (!confirm("브라우저에 저장된 모든 정보를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.")) return;
+async function resetAll() {
+  if (!confirm("브라우저에 암호화 저장된 모든 정보를 삭제할까요?\n이 작업은 되돌릴 수 없습니다.")) return;
+  if (!confirm("잠금 비밀번호 설정과 키박스 데이터가 모두 삭제됩니다. 정말 초기화할까요?")) return;
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(VAULT_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch (err) {}
+  saveEpoch += 1;
+  vaultKey = null;
+  vaultSalt = null;
+  vaultIterations = PBKDF2_ITERATIONS;
+  isUnlocked = false;
+  pendingLegacyState = null;
   state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
   deleteMode = { info: {}, account: {} };
-  render();
-  scheduleAutoSave();
-  showToast("저장정보를 초기화했어요.");
+  configureSecurityGate("setup");
+  setSecurityError("저장정보를 삭제했습니다. 새 잠금 비밀번호를 만들어 주세요.");
 }
-function backupJson() {
-  syncInputs();
+function downloadBlobNative(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function backupJson() {
+  if (!isUnlocked) return;
+  const saved = await autoSaveNow();
+  if (!saved) return showToast("암호화 저장을 완료하지 못해 백업을 만들지 않았어요.");
+  const vault = getStoredVault();
+  if (!vault) return showToast("암호화 저장내용을 찾지 못했어요.");
   const payload = {
-    app: "우리학교 키박스",
-    version: "v3.2.2",
+    app: "우리학교 키박스 암호화 백업",
+    version: "v3.3.1",
+    format: "keybox-encrypted-v1",
     exportedAt: new Date().toISOString(),
-    data: state
+    vault
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
-  saveAs(blob, `우리학교-키박스-백업-${new Date().toISOString().slice(0,10)}.json`);
-  showToast("전체 백업 파일을 저장했어요.");
+  downloadBlobNative(
+    new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"}),
+    `${getSchoolEmailPrefix()}_KEY_${getTimestampForFilename()}.keybox`
+  );
+  showToast("암호화된 키박스 전체 백업을 저장했어요.");
+}
+async function importEncryptedBackup(vault) {
+  closeSecurityUtilityModal();
+  const modal = document.createElement("div");
+  modal.id = "securityUtilityModal";
+  modal.className = "excel-modal-backdrop no-print";
+  modal.innerHTML = `
+    <div class="excel-modal security-export-modal" role="dialog" aria-modal="true" aria-labelledby="backupUnlockTitle">
+      <button class="excel-modal-close" type="button" data-backup-import="cancel" aria-label="닫기">×</button>
+      <div class="excel-modal-kicker">암호화 백업 복원</div>
+      <h3 id="backupUnlockTitle">백업을 만들 때 사용한 잠금 비밀번호를 입력하세요</h3>
+      <p class="excel-modal-desc">복호화에 성공한 경우에만 현재 브라우저의 키박스 데이터를 교체합니다.</p>
+      <label class="security-field utility-password-field"><span>잠금 비밀번호</span><input id="backupPasswordInput" type="password" autocomplete="current-password" /></label>
+      <p id="backupImportError" class="security-error" role="alert"></p>
+      <div class="excel-modal-actions">
+        <button class="btn primary" type="button" data-backup-import="restore">확인하고 복원</button>
+        <button class="btn modal-cancel" type="button" data-backup-import="cancel">취소</button>
+      </div>
+    </div>`;
+  modal.addEventListener("click", async (event) => {
+    const action = event.target?.dataset?.backupImport;
+    if (!action && event.target !== modal) return;
+    if ((action || "cancel") === "cancel") return closeSecurityUtilityModal();
+    const password = modal.querySelector("#backupPasswordInput")?.value || "";
+    const errorEl = modal.querySelector("#backupImportError");
+    if (!password) { if (errorEl) errorEl.textContent = "잠금 비밀번호를 입력해 주세요."; return; }
+    try {
+      const salt = vaultSaltFromEnvelope(vault);
+      const iterations = Number(vault?.kdf?.iterations || PBKDF2_ITERATIONS);
+      const key = await deriveVaultKey(password, salt, iterations);
+      const decrypted = await decryptVault(vault, key);
+      saveEpoch += 1;
+      localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(vault));
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      vaultKey = key;
+      vaultSalt = salt;
+      vaultIterations = iterations;
+      state = decrypted;
+      deleteMode = { info: {}, account: {} };
+      showUnlockedApp();
+      closeSecurityUtilityModal();
+      showToast("암호화 백업을 복원했어요.");
+    } catch (error) {
+      console.error(error);
+      if (errorEl) errorEl.textContent = "잠금 비밀번호가 일치하지 않거나 백업 파일이 손상되었습니다.";
+    }
+  });
+  document.body.appendChild(modal);
+  setTimeout(() => modal.querySelector("#backupPasswordInput")?.focus(), 30);
 }
 async function loadJsonFile(file) {
-  if (!file) return;
+  if (!file || !isUnlocked) return;
   try {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(await file.text());
+    const encryptedVault = parsed?.vault?.app === "hakdol-keybox-vault"
+      ? parsed.vault
+      : parsed?.app === "hakdol-keybox-vault" ? parsed : null;
+    if (encryptedVault) return importEncryptedBackup(encryptedVault);
     const data = parsed.data || parsed;
     if (!data || !Array.isArray(data.accounts) || !data.info) throw new Error("invalid");
+    const ok = confirm("이 파일은 이전 버전의 평문 JSON 백업입니다.\n불러온 뒤 현재 잠금 비밀번호로 즉시 암호화 저장할까요?");
+    if (!ok) return;
     state = { info: data.info, accounts: normalizeAccountDefaults(data.accounts) };
     deleteMode = { info: {}, account: {} };
     render();
-    scheduleAutoSave();
-    showToast("전체 백업 파일을 불러왔어요.");
+    const saved = await autoSaveNow();
+    showToast(saved ? "이전 백업을 불러와 암호화 저장했어요." : "백업은 불러왔지만 암호화 저장에 실패했어요.");
   } catch (err) {
-    showToast("전체 백업 파일을 불러오지 못했어요.");
+    console.error(err);
+    showToast("백업 파일을 불러오지 못했어요.");
   }
 }
 
@@ -2092,6 +2561,9 @@ window.toggleFavorite = toggleFavorite;
 window.openAccountUrl = openAccountUrl;
 window.copyText = copyText;
 window.copyAccountField = copyAccountField;
+window.copyInfoField = copyInfoField;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.toggleInfoVisibility = toggleInfoVisibility;
 window.addInfoRow = addInfoRow;
 window.toggleInfoDelete = toggleInfoDelete;
 window.updateInfoDeleteSelection = updateInfoDeleteSelection;
@@ -2106,6 +2578,38 @@ window.addRowToCategory = addRowToCategory;
 window.dragStart = dragStart;
 window.dragOver = dragOver;
 window.dropRow = dropRow;
+
+// 동적 카드의 이벤트는 위임 방식으로 처리합니다.
+// 인라인 onclick/onchange를 제거해 CSP에서 inline script 실행을 허용하지 않아도 됩니다.
+document.addEventListener("click", event => {
+  const target = event.target.closest("[data-action]");
+  if (!target) return;
+  const action = target.dataset.action;
+  const idx = Number(target.dataset.idx);
+  const key = target.dataset.key;
+  switch (action) {
+    case "add-row": addRow(); break;
+    case "toggle-account-delete": toggleAccountDelete(); break;
+    case "toggle-favorite": toggleFavorite(idx); break;
+    case "copy-account": copyAccountField(idx, target.dataset.field); break;
+    case "open-account": openAccountUrl(idx); break;
+    case "toggle-password": togglePasswordVisibility(idx); break;
+    case "add-info": addInfoRow(key); break;
+    case "toggle-info-delete": toggleInfoDelete(key); break;
+    case "cancel-info-delete": cancelInfoDelete(key); break;
+    case "confirm-info-delete": confirmInfoDelete(key); break;
+    case "toggle-info-visibility": toggleInfoVisibility(key, idx); break;
+    case "copy-info": copyInfoField(key, idx); break;
+    case "cancel-account-delete": cancelAccountDelete(); break;
+    case "confirm-account-delete": confirmAccountDelete(); break;
+  }
+});
+document.addEventListener("change", event => {
+  const target = event.target.closest("[data-action]");
+  if (!target) return;
+  if (target.dataset.action === "info-delete-select") updateInfoDeleteSelection(target.dataset.key);
+  if (target.dataset.action === "account-delete-select") updateAccountDeleteSelection();
+});
 
 
 function prefersReducedMotion() {
@@ -2191,10 +2695,35 @@ if (jsonLoadInput) jsonLoadInput.onchange = e => loadJsonFile(e.target.files?.[0
 
 document.getElementById("printBtn").onclick = () => {
   syncInputs();
+  clearRevealState({ renderNow: false });
   render();
   setTimeout(() => window.print(), 50);
 };
 document.getElementById("resetBtn").onclick = resetAll;
+
+const securityForm = document.getElementById("securityForm");
+if (securityForm) securityForm.addEventListener("submit", handleSecuritySubmit);
+const lockBtn = document.getElementById("lockBtn");
+if (lockBtn) lockBtn.addEventListener("click", () => lockKeybox({ reason: "manual" }));
+const privacyBtn = document.getElementById("privacyBtn");
+if (privacyBtn) privacyBtn.addEventListener("click", () => togglePrivacyScreen());
+const securityResetBtn = document.getElementById("securityResetBtn");
+if (securityResetBtn) securityResetBtn.addEventListener("click", () => {
+  const ok = confirm("잠금 비밀번호를 잊은 경우 기존 암호화 데이터는 복구할 수 없습니다.\n저장된 키박스 데이터를 모두 삭제하고 새로 시작할까요?");
+  if (!ok) return;
+  try {
+    localStorage.removeItem(VAULT_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch (error) {}
+  saveEpoch += 1;
+  pendingLegacyState = null;
+  vaultKey = null;
+  vaultSalt = null;
+  vaultIterations = PBKDF2_ITERATIONS;
+  state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
+  configureSecurityGate("setup");
+  setSecurityError("기존 저장정보를 삭제했습니다. 새 잠금 비밀번호를 만들어 주세요.");
+});
 
 const accountSearchEl = document.getElementById("searchInput");
 if (accountSearchEl) accountSearchEl.oninput = e => {
@@ -2252,11 +2781,6 @@ if (clearSearchBtn) clearSearchBtn.onclick = clearSearch;
 const searchXBtn = document.getElementById("searchXBtn");
 if (searchXBtn) searchXBtn.onclick = clearSearch;
 
-document.querySelectorAll("input[name='pwMode']").forEach(el => el.onchange = e => {
-  pwMode = e.target.value;
-  render();
-});
-
 document.querySelectorAll("[data-filter]").forEach(button => {
   button.addEventListener("click", () => setFilter(button.dataset.filter));
 });
@@ -2298,6 +2822,18 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape" && accountSearchTerm) clearSearch();
 });
 
-// 저장된 내용이 있으면 페이지를 열 때 자동으로 복원합니다.
-// 저장된 내용이 없거나 손상된 경우에는 기본 예시 데이터로 표시합니다.
-if (!loadLocal({ silent: true })) { render(); autoSaveNow(); } else { setSaveStatus("saved"); }
+
+// 실제 사용자 활동이 있으면 자동 잠금 타이머를 다시 시작합니다.
+["pointerdown", "keydown", "touchstart"].forEach(eventName => {
+  document.addEventListener(eventName, () => { if (isUnlocked) resetAutoLockTimer(); }, { passive: true });
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && isUnlocked) {
+    clearRevealState();
+    autoSaveNow();
+  }
+});
+
+// 잠금 상태에서 시작합니다. 저장된 암호화 vault가 있으면 키박스 잠금 비밀번호로 복호화하고,
+// 이전 버전의 평문 localStorage가 있으면 안전한 마이그레이션 화면을 먼저 표시합니다.
+initializeSecurity();

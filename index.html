@@ -4,12 +4,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4F46E5" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <title>우리학교 키박스</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="keybox-locked">
+  <div id="securityGate" class="security-gate no-print" role="dialog" aria-modal="true" aria-labelledby="securityGateTitle">
+    <div class="security-card">
+      <div class="security-icon" aria-hidden="true">🔐</div>
+      <p id="securityGateKicker" class="security-kicker">보안 잠금</p>
+      <h1 id="securityGateTitle">우리학교 키박스</h1>
+      <p id="securityGateDesc" class="security-desc">이 브라우저의 키박스 잠금 비밀번호를 입력해 주세요.</p>
+      <form id="securityForm" class="security-form" autocomplete="off">
+        <label class="security-field">
+          <span>잠금 비밀번호</span>
+          <input id="masterPasswordInput" type="password" autocomplete="current-password" spellcheck="false" required />
+        </label>
+        <label id="masterPasswordConfirmWrap" class="security-field" hidden>
+          <span>잠금 비밀번호 확인</span>
+          <input id="masterPasswordConfirmInput" type="password" autocomplete="new-password" spellcheck="false" />
+        </label>
+        <p id="securityGateWarning" class="security-warning" hidden></p>
+        <p id="securityGateError" class="security-error" role="alert" aria-live="assertive"></p>
+        <button id="securitySubmitBtn" class="btn primary security-submit" type="submit">키박스 열기</button>
+      </form>
+      <p id="securityLocalNote" class="security-local-note">저장된 데이터는 이 브라우저에 암호화되어 보관됩니다.</p>
+      <button id="securityResetBtn" class="security-reset-link" type="button">잠금 비밀번호를 잊었나요? 저장정보 초기화</button>
+    </div>
+  </div>
+
   <header class="top-nav no-print" aria-label="상단 메뉴">
     <div class="top-nav-inner">
       <a class="top-brand" href="#searchSection" aria-label="검색 영역으로 이동">
@@ -22,7 +48,12 @@
         <a href="#categoryOverview">정보 종류</a>
         <a href="#managementTools">파일 관리</a>
       </nav>
-      <a class="top-github" href="https://github.com/sen-vip/hakdol-keybox" target="_blank" rel="noopener">GitHub</a>
+      <div class="top-security-actions">
+        <span id="securityStatusBadge" class="security-status-badge" title="현재 키박스 보안 상태">🔒 암호화 저장</span>
+        <button id="privacyBtn" class="top-security-btn" type="button" title="화면의 민감정보 가리기">👁 화면 가리기</button>
+        <button id="lockBtn" class="top-security-btn lock" type="button" title="키박스 잠그기">🔒 잠금</button>
+        <a class="top-github" href="https://github.com/sen-vip/hakdol-keybox" target="_blank" rel="noopener">GitHub</a>
+      </div>
     </div>
   </header>
 
@@ -31,7 +62,7 @@
       <div class="hero-copy">
         <p class="eyebrow"><span aria-hidden="true">🔑</span> 행정실 공용 키박스</p>
         <h1>찾고, 복사하고,<br class="mobile-only" /> 파일로 보관하세요</h1>
-        <p class="desc">사이트 계정·학교 정보·계좌·결제수단을 한곳에서 관리합니다. 입력한 정보는 서버로 전송되지 않고 이 PC에 저장됩니다.</p>
+        <p class="desc">사이트 계정·학교 정보·계좌·결제수단을 한곳에서 관리합니다. 입력한 정보는 서버로 전송하지 않고, 내가 만든 잠금 비밀번호로 암호화해 이 브라우저에 저장합니다.</p>
       </div>
 
       <div class="hero-actions no-print" aria-label="저장 및 백업">
@@ -39,8 +70,8 @@
           <span class="status-dot" aria-hidden="true"></span>
           <span id="saveStatusText">이 PC에 자동 저장됨</span>
         </button>
-        <button id="exportExcelBtn" class="btn primary" type="button">현재 정보 엑셀로 저장</button>
-        <button id="jsonBackupBtn" class="btn secondary" type="button">전체 백업 저장</button>
+        <button id="exportExcelBtn" class="btn primary" type="button">안전한 엑셀 저장</button>
+        <button id="jsonBackupBtn" class="btn secondary" type="button">🔐 암호화 백업</button>
       </div>
     </header>
 
@@ -113,8 +144,8 @@
         </div>
         <div class="account-title-side no-print">
           <p id="rowCount">0개 항목</p>
-          <button id="accountAddBtn" class="small-btn add-account-btn" onclick="addRow()" type="button">+ 로그인 정보 추가</button>
-          <button id="accountDeleteModeBtn" class="small-btn delete-mode-btn" onclick="toggleAccountDelete()" type="button">항목 삭제</button>
+          <button id="accountAddBtn" class="small-btn add-account-btn" data-action="add-row" type="button">+ 로그인 정보 추가</button>
+          <button id="accountDeleteModeBtn" class="small-btn delete-mode-btn" data-action="toggle-account-delete" type="button">항목 삭제</button>
         </div>
       </div>
       <div class="account-column-labels no-print" aria-hidden="true">
@@ -125,13 +156,22 @@
 
     <section class="info-layout" id="infoCards"></section>
 
-    <section class="storage-notice no-print" aria-label="엑셀 저장 안내">
+    <section class="security-notice no-print" aria-label="키박스 보안 안내">
+      <div class="security-notice-icon" aria-hidden="true">🔐</div>
       <div>
-        <p class="storage-kicker">다른 PC로 옮길 때</p>
-        <h2>현재 정보를 엑셀로 저장해 두세요.</h2>
-        <p>엑셀 파일은 직접 열어 확인·수정할 수 있고, 다른 PC의 키박스에서 다시 가져올 수도 있습니다.</p>
+        <p class="security-notice-kicker">보안 안내</p>
+        <h2>암호화해 저장하지만, 모든 위험을 막는 금고는 아니에요.</h2>
+        <p>공용 PC·악성 프로그램·과도한 권한의 브라우저 확장 프로그램·사이트 코드 변조 위험은 남을 수 있습니다. 공동인증서 비밀번호, 금융·은행 비밀번호, 최고권한 관리자 계정처럼 특히 중요한 인증정보는 전용 비밀번호 관리도구 사용을 권장합니다.</p>
       </div>
-      <button class="btn notice-backup" type="button" data-excel-export-trigger>현재 정보 엑셀로 저장</button>
+    </section>
+
+    <section class="storage-notice no-print" aria-label="보안 백업 안내">
+      <div>
+        <p class="storage-kicker">안전하게 옮기기</p>
+        <h2>비밀번호까지 보관할 땐 암호화 백업을 사용하세요.</h2>
+        <p>일반 엑셀은 민감정보를 기본 제외합니다. 전체 정보는 암호화된 키박스 백업(.keybox)으로 보관하는 것을 권장합니다.</p>
+      </div>
+      <button class="btn notice-backup" type="button" data-backup-trigger>🔐 암호화 백업 저장</button>
     </section>
 
     <details id="managementTools" class="management-tools no-print">
@@ -148,8 +188,8 @@
             <h3>엑셀로 관리하기</h3>
             <span class="management-badge recommended">추천</span>
           </div>
-          <p>현재 정보를 엑셀로 저장해 다른 PC에서 다시 가져오거나, 파일을 직접 열어 확인·수정할 수 있어요.</p>
-          <span class="management-file-note">엑셀(.xlsx) · 직접 열어볼 수 있어요</span>
+          <p>민감정보를 기본 제외한 엑셀을 저장합니다. 비밀번호를 포함하려면 경고를 확인한 뒤 직접 선택해야 해요.</p>
+          <span class="management-file-note">엑셀(.xlsx) · 비밀번호/민감값 기본 제외</span>
           <div class="management-actions">
             <button class="btn primary" type="button" data-excel-export-trigger>현재 정보 엑셀로 저장</button>
             <label class="btn soft file-label">엑셀 파일 가져오기<input id="uploadInput" type="file" accept=".xlsx,.xls" hidden /></label>
@@ -161,11 +201,11 @@
             <h3>키박스 전체 백업</h3>
             <span class="management-badge advanced">고급</span>
           </div>
-          <p>즐겨찾기와 순서까지 현재 상태 그대로 보관합니다. 파일을 직접 수정하지 않는 전체 보관용이에요.</p>
-          <span class="management-file-note">키박스 전용(.json) · 직접 수정하지 않아요</span>
+          <p>즐겨찾기·순서·비밀번호까지 암호화 상태 그대로 보관합니다. 다른 PC에서 복원할 때는 백업을 만들 때 사용한 잠금 비밀번호가 필요해요.</p>
+          <span class="management-file-note">키박스 전용(.keybox) · 암호화 상태로 보관</span>
           <div class="management-actions">
-            <button class="btn secondary" type="button" data-backup-trigger>전체 백업 파일 저장</button>
-            <label class="btn soft file-label">전체 백업 파일 불러오기<input id="jsonLoadInput" type="file" accept=".json,application/json" hidden /></label>
+            <button class="btn secondary" type="button" data-backup-trigger>🔐 암호화 백업 저장</button>
+            <label class="btn soft file-label">백업 파일 불러오기<input id="jsonLoadInput" type="file" accept=".keybox,.json,application/json" hidden /></label>
           </div>
         </section>
         <section class="management-group other-management">
@@ -182,7 +222,7 @@
       </div>
     </details>
 
-    <footer class="app-footer no-print">우리학교 키박스 v3.2.2 · senvip</footer>
+    <footer class="app-footer no-print">우리학교 키박스 v3.3.1 · 잠금 안내 개선 · senvip</footer>
   </main>
 
   <nav class="mobile-bottom-nav no-print" aria-label="모바일 빠른 메뉴">
@@ -196,8 +236,6 @@
   <div id="toast" class="toast no-print" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
