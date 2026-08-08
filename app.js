@@ -1,5 +1,5 @@
 // ============================================================
-// 우리학교 키박스 v3.3.1 — 브라우저 암호화 · 쉬운 잠금 안내 · 안전한 백업
+// 우리학교 키박스 v3.3.2 — 8자 잠금 비밀번호 · 5분 자동 잠금 · 브라우저 암호화
 // Web Crypto(AES-GCM + PBKDF2) 기반 로컬 암호화 저장
 // ============================================================
 
@@ -7,7 +7,7 @@ const LEGACY_STORAGE_KEY = "hakdolSchoolKeyboxV30";
 const VAULT_STORAGE_KEY = "hakdolSchoolKeyboxVaultV1";
 const VAULT_VERSION = 1;
 const PBKDF2_ITERATIONS = 600000;
-const AUTO_LOCK_MS = 10 * 60 * 1000;
+const AUTO_LOCK_MS = 5 * 60 * 1000;
 const REVEAL_MS = 10 * 1000;
 
 const DEFAULT_INFO = {
@@ -738,7 +738,7 @@ function configureSecurityGate(mode) {
     if (kicker) kicker.textContent = "보안 업데이트";
     if (title) title.textContent = "기존 키박스에 잠금을 설정할게요";
     if (desc) desc.textContent = "기존 자료는 그대로 두고, 이 브라우저에서 사용할 잠금 비밀번호를 새로 만들어 암호화합니다.";
-    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 12자 이상으로 설정해 주세요."; }
+    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 8자 이상으로 설정해 주세요."; }
     if (confirmWrap) confirmWrap.hidden = false;
     if (submit) submit.textContent = "잠금 비밀번호 만들고 시작";
     if (reset) reset.hidden = true;
@@ -746,7 +746,7 @@ function configureSecurityGate(mode) {
     if (kicker) kicker.textContent = "처음 보안 설정";
     if (title) title.textContent = "내 키박스 잠금 비밀번호 만들기";
     if (desc) desc.textContent = "이 브라우저의 키박스를 열 때 사용할 잠금 비밀번호를 만들어 주세요. 사이트 공용 비밀번호가 아닙니다.";
-    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 12자 이상으로 설정해 주세요."; }
+    if (warning) { warning.hidden = false; warning.textContent = "잠금 비밀번호는 이 브라우저의 키박스를 여는 데 사용합니다. 잊으면 복구할 수 없으니 8자 이상으로 설정해 주세요."; }
     if (confirmWrap) confirmWrap.hidden = false;
     if (submit) submit.textContent = "잠금 비밀번호 만들기";
     if (reset) reset.hidden = true;
@@ -828,7 +828,7 @@ async function lockKeybox({ reason = "manual" } = {}) {
   clearTimeout(autoLockTimer);
   clearRevealState({ renderNow: false });
   configureSecurityGate("unlock");
-  if (reason === "idle") setSecurityError("10분 동안 사용하지 않아 자동으로 잠겼습니다.");
+  if (reason === "idle") setSecurityError("5분 동안 사용하지 않아 자동으로 잠겼습니다.");
 }
 async function createOrMigrateVault(password, sourceState) {
   const salt = randomBytes(16);
@@ -866,7 +866,7 @@ async function handleSecuritySubmit(event) {
   setSecurityError("");
   if (!pwd) return setSecurityError("잠금 비밀번호를 입력해 주세요.");
   if (securityMode !== "unlock") {
-    if (pwd.length < 12) return setSecurityError("잠금 비밀번호는 12자 이상으로 설정해 주세요.");
+    if (pwd.length < 8) return setSecurityError("잠금 비밀번호는 8자 이상으로 설정해 주세요.");
     if (pwd !== confirmPwd) return setSecurityError("잠금 비밀번호 확인이 일치하지 않습니다.");
   }
   setSecurityBusy(true);
@@ -2431,7 +2431,7 @@ async function backupJson() {
   if (!vault) return showToast("암호화 저장내용을 찾지 못했어요.");
   const payload = {
     app: "우리학교 키박스 암호화 백업",
-    version: "v3.3.1",
+    version: "v3.3.2",
     format: "keybox-encrypted-v1",
     exportedAt: new Date().toISOString(),
     vault
